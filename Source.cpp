@@ -1,32 +1,19 @@
-//adapted from: https://www.techiedelight.com/graph-implementation-using-stl/
-//and https://www.includehelp.com/cpp-tutorial/dijkstras-algorithm.aspx
+/* djikstras algorithm adapted from
+https://www.includehelp.com/cpp-tutorial/dijkstras-algorithm.aspx
+*/
 
-#include <iostream>
-#include <vector>
-#include "Road.h"
-#include "Map.h"
-using namespace std;
+#include "_include/Map.h"
 
-typedef pair<int, int> Pair;
-
-// Graph Implementation using STL
 int main()
 {
 
-	// construct graph
-	string f = "data/manhattan.dat";
-
-	Map<int> m(f);
-
-	/*
-	// print adjacency list representation of graph
-	graph.printAdjList();
+	// construct graph by reading data from file
+	std::string f = "_data/manhattan.dat";
+	Map<int> manhattan(f);
 
 	// calculate shortest path from node u=1
-	graph.calculateSP(0);
-	//graph.printAdjMatrix();
-	*/
+	manhattan.calculateSP(61);
+	manhattan.printAdjList();
 
-	system("pause");
 	return 0;
 }
