@@ -17,14 +17,14 @@ template<class V>
 class Map : public RoadMapInterface<V>
 {
 	std::vector<Intersection<V>*> adjListV;
-	int adj_matrix[no_Intersections][no_Intersections];
+	double adj_matrix[no_Intersections][no_Intersections];
 public:
 	//Constructor (populates Map)
 	Map(std::string&);
 	void calculateSP(const V&);
-	int findSmallestUnvisitedIntersection(bool[], int[]);
+	int findSmallestUnvisitedIntersection(bool[], double[]);
 	void printAdjList() const;
-	void printAdjMatrix() const;
+	void printAdjMatrix(bool) const;
 	//complete functions from the interface
 	//void updateRoad(std::string&,int,int,int) = 0;
     //void updateIntersection(V,double) = 0; //add update vector of adj intersections
@@ -33,7 +33,7 @@ public:
 template<class V>
 Map<V>::Map(std::string &f) {
 	V s = 0;
-	adjListV.push_back(new Intersection<V>(s));
+	adjListV.push_back(new Intersection<V>(s)); //dummy intersection
 	
 	//read <city>.dat file and load road information
 	//https://www.new-york-city-map.com/manhattan.htm
@@ -93,9 +93,12 @@ Map<V>::Map(std::string &f) {
 
 template<class V>
 void Map<V>::calculateSP(const V& u) {
+	/* djikstras algorithm adapted from
+	https://www.includehelp.com/cpp-tutorial/dijkstras-algorithm.aspx
+	*/
 
 	bool visited[no_Intersections];
-	int distance[no_Intersections];
+	double distance[no_Intersections];
 
 	//init adj_matrix, adj = 0, all others at inf
 	for (int i = 0; i < no_Intersections; i++)
@@ -115,7 +118,7 @@ void Map<V>::calculateSP(const V& u) {
 		}
 	}
 
-	printAdjMatrix();
+	printAdjMatrix(true);
 
 	// calculate distance
 	//u's distance to itself = 0
@@ -146,15 +149,15 @@ void Map<V>::calculateSP(const V& u) {
 }
 
 template<class V>
-int Map<V>::findSmallestUnvisitedIntersection(bool visited[], int distance[]) {
-		int min = inf, smallest_weight_Intersection;
+int Map<V>::findSmallestUnvisitedIntersection(bool visited[], double distance[]) {
+		int min = inf, smallest_congestion_Intersection;
 		for (int i = 0; i < no_Intersections; i++){
 			if (!visited[i] && distance[i] <= min){
 				min = distance[i];
-				smallest_weight_Intersection = i;
+				smallest_congestion_Intersection = i;
 			}
 		}
-		return smallest_weight_Intersection;
+		return smallest_congestion_Intersection;
 }
 
 
@@ -168,7 +171,7 @@ void Map<V>::printAdjList() const {
 		std::cout << curr->getIntersectionValue(); //print Map Intersection
 		curr = curr->getNextIntersection();
 		while (curr != nullptr){
-			std::cout << " --> [" << curr->getIntersectionValue() << ",w(" << curr->getIntersectionCongestion() << ")]"; //print adjacent Intersections to Map Intersection
+			std::cout << " --> [" << curr->getIntersectionValue() << ",C(" << curr->getIntersectionCongestion() << ")]"; //print adjacent Intersections to Map Intersection
 			curr = curr->getNextIntersection(); //move to next adjacent Intersection
 		}
 		std::cout << std::endl;
@@ -177,16 +180,22 @@ void Map<V>::printAdjList() const {
 
 // print adjacency list representation of Map
 template<class V>
-void Map<V>::printAdjMatrix() const {
+void Map<V>::printAdjMatrix(bool print_head) const {
+	int inter;
+	if(print_head)
+		inter = 10;
+	else
+		inter = no_Intersections;
+
 	std::cout << std::endl << "Adjacency matrix..." << std::endl;
 	std::cout << "\t";
-	for (int i = 0; i < no_Intersections; i++) {
+	for (int i = 0; i < inter; i++) {
 		std::cout << i << "\t";
 	}
 	std::cout << std::endl;
-	for (int i = 0; i < no_Intersections; i++) {
+	for (int i = 0; i < inter; i++) {
 		std::cout << i << "\t";
-		for (int j = 0; j < no_Intersections; j++) {
+		for (int j = 0; j < inter; j++) {
 			if (adj_matrix[i][j] == inf) std::cout << static_cast<unsigned char>(236) << "\t";
 			else std::cout << adj_matrix[i][j] << "\t";
 		}

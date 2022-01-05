@@ -8,7 +8,7 @@ template<class V>
 class RoadMapInterface{
     virtual void calculateSP(const V&) = 0;
     virtual void printAdjList() const = 0;
-    virtual void printAdjMatrix() const = 0;
+    virtual void printAdjMatrix(bool) const = 0;
     //virtual void printRoadMap() const = 0;
     //virtual void updateRoad(string&,int,int,int) = 0;
     //virtual void updateIntersection(V,double) = 0; //add update vector of adj intersections
