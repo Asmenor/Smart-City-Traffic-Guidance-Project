@@ -1,5 +1,6 @@
-/* djikstras algorithm adapted from
-https://www.includehelp.com/cpp-tutorial/dijkstras-algorithm.aspx
+/*
+Author: Ali Haider
+Email: alihaider1@outlook.com
 */
 
 #include "_include/Map.h"
@@ -13,7 +14,7 @@ int main()
 
 	// calculate shortest path from node u=1
 	manhattan.calculateSP(61);
-	manhattan.printAdjList();
+	//manhattan.printAdjList();
 
 	return 0;
 }
