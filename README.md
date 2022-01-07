@@ -5,7 +5,7 @@ A general data structure for simulating traffic.
    
 ## inputs
 - traffic distribution
-- edges (roads) and edge weights (congestion)
+- Intersections (nodes), Roads (edges) and edge weights (congestion)
 
 ## outputs
 - optimal paths
