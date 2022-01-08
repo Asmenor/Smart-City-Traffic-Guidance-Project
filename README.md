@@ -1,6 +1,6 @@
 # traffic-management
  
-A general data structure for simulating traffic.
+A generic data structure for simulating city traffic.
 
    
 ## inputs
