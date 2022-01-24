@@ -3,51 +3,37 @@
 
 #include <iostream>
 #include <string>
-#include "Intersection.h"
-
 
 template <class V>
 class Road {
 	std::string name;
 	V src;
 	V dst;
-	double Congestion;
-	
+	float Congestion;
+	float length_segment; //miles
+	int no_of_cars;
+	float avg_speed; //mph
+	int no_of_lanes;
+
 public:
-	Road(): name("no name"), src(0),dst(0),Congestion(0) {}
-	Road(std::string& n, const V& s, const V& d): name(n), src(s), dst(d), Congestion(0) {}
-	Road(std::string& n, const V& s, const V& d, const double& c): name(n), src(s), dst(d), Congestion(c) {}
+	Road(): name("no name"), src(0),dst(0),Congestion(0.0), length_segment(0.0), no_of_cars(0), avg_speed(0.0), no_of_lanes(0)  {}
+	Road(std::string& n, const V& s, const V& d): name(n), src(s), dst(d), Congestion(0), length_segment(0.0), no_of_cars(0), avg_speed(0.0), no_of_lanes(0) {}
+	Road(std::string& n, const V& s, const V& d, const float& c): name(n), src(s), dst(d), Congestion(c), length_segment(0.0), no_of_cars(0), avg_speed(0.0), no_of_lanes(0) {}
 
-	void setSrcDst(const V& s, const V& d) {
-		src = s; dst = d;
-	}
-	void setNameSrcDstCongestion(std::string& n, const V& s, const V& d, const V& c) {
-		name = n, src = s; dst = d; Congestion = c;
+	void setRoadParameters(std::string& nme, const V& s, const V& d, const V& c, const float& l, const int& n, const float& v, const int& n_l) {
+		name = nme, src = s; dst = d; Congestion = c;
+		length_segment = l; no_of_cars = n; avg_speed = v, no_of_lanes = n_l;
 	}
 
-	void setName(std::string& n){
-		name = n;
-	}
-
-	void setCongestion(const V& c) {
-		Congestion = c;
-	}
-
-	V getSrc() const {
-		return src;
-	}
-
-	V getDst() const {
-		return dst;
-	}
-	
-	V getCongestion() const {
-		return Congestion;
-	}
-
-	std::string& getName() const {
-		return name;
-	}
+	void setName(std::string& n) { name = n; }
+	void setCongestion(const V& c) { Congestion = c; }
+	V getCongestion() const { return Congestion; }
+	void setSrcDst(const V& s, const V& d) { src = s; dst = d; }
+	V getSrc() const { return src; }
+	V getDst() const { return dst; }
+	std::string& getName() const { return name;}
+	std::float& getLength() const { return length_segment; }
+	void setLength(const float& l) { length_segment = l; }
 
 };
 
