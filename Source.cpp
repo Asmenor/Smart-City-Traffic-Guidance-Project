@@ -4,6 +4,7 @@ Email: alihaider1@outlook.com
 */
 
 #include "_include/Map.h"
+#include <string>
 
 int main()
 {
@@ -13,7 +14,7 @@ int main()
 	Map<int> manhattan(f);
 
 	// calculate shortest path from node u=1
-	manhattan.calculateSP(61);
+	manhattan.calculateDijkstrasSP(61);
 	//manhattan.printAdjList();
 
 	return 0;

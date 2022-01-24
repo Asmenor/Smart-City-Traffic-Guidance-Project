@@ -6,7 +6,7 @@
 
 template<class V>
 class RoadMapInterface{
-    virtual void calculateSP(const V&) = 0;
+    virtual void calculateDijkstrasSP(const V&) = 0;
     virtual void printAdjList() const = 0;
     virtual void printAdjMatrix(bool) const = 0;
     //virtual void printRoadMap() const = 0;
