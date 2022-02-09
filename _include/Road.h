@@ -27,12 +27,12 @@ public:
 
 	void setName(std::string& n) { name = n; }
 	void setCongestion(const float& c) { Congestion = c; }
-	float& getCongestion() const { return Congestion; }
+	float getCongestion() const { return Congestion; }
 	void setSrcDst(const V& s, const V& d) { src = s; dst = d; }
 	V getSrc() const { return src; }
 	V getDst() const { return dst; }
-	std::string& getName() const { return name;}
-	float& getLength() const { return length_segment; }
+	std::string getName() const { return name;}
+	float getLength() const { return length_segment; }
 	void setLength(const float& l) { length_segment = l; }
 
 };
