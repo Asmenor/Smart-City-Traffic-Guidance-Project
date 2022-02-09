@@ -10,8 +10,10 @@
 #include "Intersection.h"
 #include "RoadMapInterface.h"
 #include "Split.h"
+#include <iomanip>
+#include <boost/math/distributions/pareto.hpp>
 
-const int inf = 1000;
+const int inf = 0.0;
 const int no_Intersections = 100;  //remove and make dynamic
 
 template<class V>
@@ -212,7 +214,7 @@ void Map<V>::printAdjMatrix(bool print_head) const {
 		std::cout << i << "\t";
 		for (int j = 0; j < inter; j++) {
 			if (adj_matrix[i][j] == inf) std::cout << static_cast<unsigned char>(236) << "\t";
-			else std::cout << adj_matrix[i][j] << "\t";
+			else std::cout << std::setprecision(2) << adj_matrix[i][j] << "\t";
 		}
 		std::cout << std::endl;
 	}
