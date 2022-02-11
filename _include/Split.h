@@ -5,8 +5,8 @@
 #include <iostream>
 #include <string>
 
-#define max 8 // define the max string
-std::string strings[max];
+#define MAX 8 // define the max string
+std::string strings[MAX];
 
  
 int split(std::string str, char seperator, int return_location)
