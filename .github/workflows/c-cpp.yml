@@ -12,12 +12,13 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
-    - name: configure
-      run: ./configure
-    - name: make
-      run: make
-    - name: make check
-      run: make check
-    - name: make distcheck
-      run: make distcheck
+    - name: Print a greeting
+      env:
+        MY_VAR: Hi there!
+        MSG: I'm checking your code...
+      run: echo $MY_VAR $MSG
+      
+    - name: Check out repository
+      uses: actions/checkout@v2
+    - name: Run code
+      run: gcc Source.cpp
