@@ -17,16 +17,26 @@ class Road {
 
 public:
 	Road(): name("no name"), src(0),dst(0),Congestion(0.0), length_segment(0.0), no_of_cars(0), avg_speed(0.0), no_of_lanes(0)  {}
-	Road(std::string& n, const V& s, const V& d): name(n), src(s), dst(d), Congestion(0), length_segment(0.0), no_of_cars(0), avg_speed(0.0), no_of_lanes(0) {}
-	Road(std::string& n, const V& s, const V& d, const float& c): name(n), src(s), dst(d), Congestion(c), length_segment(0.0), no_of_cars(0), avg_speed(0.0), no_of_lanes(0) {}
+	Road(std::string& n, const V& s, const V& d, const int& no, const float& v, const float& l){
+		name = n;
+		src = s;
+		dst = d;
+		length_segment = 0.0;
+		no_of_cars = no;
+		avg_speed = v;
+		no_of_lanes = l;
+		Congestion = no_of_cars / (no_of_lanes * avg_speed);
+
+	}
 
 	void setRoadParameters(std::string& nme, const V& s, const V& d, const float& c, const float& l, const int& n, const float& v, const int& n_l) {
-		name = nme, src = s; dst = d; Congestion = c;
+		name = nme, src = s; dst = d;
 		length_segment = l; no_of_cars = n; avg_speed = v, no_of_lanes = n_l;
+		//re-calculate congestion
+		Congestion = no_of_cars / (no_of_lanes * avg_speed);
 	}
 
 	void setName(std::string& n) { name = n; }
-	void setCongestion(const float& c) { Congestion = c; }
 	float getCongestion() const { return Congestion; }
 	void setSrcDst(const V& s, const V& d) { src = s; dst = d; }
 	V getSrc() const { return src; }

@@ -22,6 +22,7 @@ template<class V>
 class Map : public RoadMapInterface<V>
 {
 	std::vector<Intersection<V>*> adjListV;
+	std::vector<Road<V>*> RoadV;
 	float adj_matrix[no_Intersections][no_Intersections];
 public:
 	//Constructor (populates Map)
@@ -31,6 +32,7 @@ public:
 	void printAdjList() const;
 	void printAdjMatrix(bool) const;
 	float getExponential(int, float);
+	void printRoads() const;
 	//complete functions from the interface
 	//void updateRoad(std::string&,int,int,int) = 0;
     //void updateIntersection(V,float) = 0; //add update vector of adj intersections
@@ -66,9 +68,14 @@ Map<V>::Map(std::string &f) {
 			std::string name = split(line,',',1,true);
 			V src = split(line,',',2);
 			V dest = split(line,',',3);
-			float congestion = x_m * getExponential(20, dist(rng)); //static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
-			std::cout << std::fixed << "\nadding: " << src << "----(" << congestion << ")----" << dest << std::endl;
 			
+			
+			//Add Road
+			RoadV.push_back(new Road<V>(name, src, dest, static_cast<int>(x_m * getExponential(20, dist(rng))),20,3));
+			//end Add Road
+
+			float congestion = 0.0;//= RoadV[RoadV.size - 1].getCongestion();
+			std::cout << std::fixed << "\nadding: " << src << "----(" << congestion << ")----" << dest << std::endl;
 
 			/*Add congestion value to adj matrix*/
 			adj_matrix[src][dest] = congestion;
@@ -239,6 +246,14 @@ float Map<V>::getExponential(int n, float x)
         sum = 1 + x * sum / i;
  
     return sum;
+}
+
+template<class V>
+void Map<V>::printRoads() const{
+	std::cout << "Roads:\n";
+	for( auto x : RoadV){
+		std::cout << x->getName() << " " << x->getSrc() << " "  << x->getDst() << " "  << x->getCongestion() << "\n" ;
+	}
 }
 
 #endif

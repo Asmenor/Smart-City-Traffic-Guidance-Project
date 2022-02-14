@@ -16,6 +16,7 @@ int main()
 	// calculate shortest path from node u=1
 	manhattan.calculateDijkstrasSP(61);
 	//manhattan.printAdjList();
+	manhattan.printRoads();
 
 	return 0;
 }

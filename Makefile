@@ -1,5 +1,6 @@
 test:
-	g++ Source.pp
+	g++ Source.cpp
+	./a.out
 
 clean:
 	rm -f a.out
