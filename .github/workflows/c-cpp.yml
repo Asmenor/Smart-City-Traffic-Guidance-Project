@@ -21,4 +21,4 @@ jobs:
     - name: Check out repository
       uses: actions/checkout@v2
     - name: Run code
-      run: gcc Source.cpp
+      run: g++ Source.cpp
