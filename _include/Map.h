@@ -11,7 +11,9 @@
 #include "RoadMapInterface.h"
 #include "Split.h"
 #include <iomanip>
-#include <boost/math/distributions/pareto.hpp>
+//for pareto random variables
+#include <boost/random.hpp>
+#include <boost/range/irange.hpp>
 
 const int inf = 0.0;
 const int no_Intersections = 100;  //remove and make dynamic
@@ -20,6 +22,7 @@ template<class V>
 class Map : public RoadMapInterface<V>
 {
 	std::vector<Intersection<V>*> adjListV;
+	std::vector<Road<V>*> RoadV;
 	float adj_matrix[no_Intersections][no_Intersections];
 public:
 	//Constructor (populates Map)
@@ -28,6 +31,8 @@ public:
 	int findSmallestUnvisitedIntersection(bool[], float[]);
 	void printAdjList() const;
 	void printAdjMatrix(bool) const;
+	float getExponential(int, float);
+	void printRoads() const;
 	//complete functions from the interface
 	//void updateRoad(std::string&,int,int,int) = 0;
     //void updateIntersection(V,float) = 0; //add update vector of adj intersections
@@ -37,6 +42,11 @@ template<class V>
 Map<V>::Map(std::string &f) {
 	V s = 0;
 	adjListV.push_back(new Intersection<V>(s)); //dummy intersection
+
+	//for Pareto Random Variable
+	boost::random::mt19937 rng(time(0));
+    boost::random::exponential_distribution<> dist(1.0);
+    float x_m = 1;
 	
 	/*Init Adjacency Matrix*/
 	//init adj_matrix, adj = 0, all others at inf
@@ -58,9 +68,14 @@ Map<V>::Map(std::string &f) {
 			std::string name = split(line,',',1,true);
 			V src = split(line,',',2);
 			V dest = split(line,',',3);
-			float congestion = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
-			std::cout << std::fixed << "\nadding: " << src << "----(" << congestion << ")----" << dest << std::endl;
 			
+			
+			//Add Road
+			RoadV.push_back(new Road<V>(name, src, dest, static_cast<int>(x_m * getExponential(20, dist(rng))),20,3));
+			//end Add Road
+
+			float congestion = 0.0;//= RoadV[RoadV.size - 1].getCongestion();
+			std::cout << std::fixed << "\nadding: " << src << "----(" << congestion << ")----" << dest << std::endl;
 
 			/*Add congestion value to adj matrix*/
 			adj_matrix[src][dest] = congestion;
@@ -219,6 +234,26 @@ void Map<V>::printAdjMatrix(bool print_head) const {
 		std::cout << std::endl;
 	}
 		
+}
+
+
+template<class V>
+float Map<V>::getExponential(int n, float x)
+{
+    float sum = 1.0;
+ 
+    for (int i = n - 1; i > 0; --i )
+        sum = 1 + x * sum / i;
+ 
+    return sum;
+}
+
+template<class V>
+void Map<V>::printRoads() const{
+	std::cout << "Roads:\n";
+	for( auto x : RoadV){
+		std::cout << x->getName() << " " << x->getSrc() << " "  << x->getDst() << " "  << x->getCongestion() << "\n" ;
+	}
 }
 
 #endif
