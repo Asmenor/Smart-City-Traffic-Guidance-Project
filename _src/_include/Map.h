@@ -32,7 +32,7 @@ public:
 	void printAdjList() const;
 	void printAdjMatrix(bool) const;
 	float getExponential(int, float);
-	void printRoads() const;
+	void printRoadMap() const;
 	//complete functions from the interface
 	//void updateRoad(std::string&,int,int,int) = 0;
     //void updateIntersection(V,float) = 0; //add update vector of adj intersections
@@ -117,7 +117,7 @@ Map<V>::Map(std::string &f) {
 
 	}
 	else{
-		std::cout << "\n file not found.";
+		std::cout << "\nData file '" << f << "', not found.\n";
 	}
 }
 
@@ -249,7 +249,7 @@ float Map<V>::getExponential(int n, float x)
 }
 
 template<class V>
-void Map<V>::printRoads() const{
+void Map<V>::printRoadMap() const{
 	std::cout << "Roads:\n";
 	for( auto x : RoadV){
 		std::cout << x->getName() << " " << x->getSrc() << " "  << x->getDst() << " "  << x->getCongestion() << "\n" ;
