@@ -4,19 +4,21 @@ Email: alihaider1@outlook.com
 */
 
 #include "_include/Map.h"
+#include "_include/ProactiveRouting.h"
 #include <string>
 
 int main()
 {
 
-	// construct graph by reading data from file
+	//road and intersection information
 	std::string f = "_data/manhattan.dat";
-	Map<int> manhattan(f);
 
+	ProactiveRouting<int> PR(f);
+	
 	// calculate shortest path from node u=1
 	//manhattan.calculateDijkstrasSP(61);
 	//manhattan.printAdjList();
-	manhattan.printRoadMap();
+	PR.printMap();
 
 	return 0;
 }

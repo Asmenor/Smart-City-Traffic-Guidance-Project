@@ -8,35 +8,36 @@
 #include <string>
 #include "Road.h"
 #include "Intersection.h"
-#include "RoadMapInterface.h"
 #include "Split.h"
 #include <iomanip>
 //for pareto random variables
 #include <boost/random.hpp>
 #include <boost/range/irange.hpp>
 
+
 const int inf = 0.0;
 const int no_Intersections = 100;  //remove and make dynamic
 
 template<class V>
-class Map : public RoadMapInterface<V>
+class Map
 {
 	std::vector<Intersection<V>*> adjListV;
 	std::vector<Road<V>*> RoadV;
 	float adj_matrix[no_Intersections][no_Intersections];
 public:
 	//Constructor (populates Map)
+	Map();
 	Map(std::string&);
-	void calculateDijkstrasSP(const V&);
-	int findSmallestUnvisitedIntersection(bool[], float[]);
 	void printAdjList() const;
 	void printAdjMatrix(bool) const;
-	float getExponential(int, float);
 	void printRoadMap() const;
-	//complete functions from the interface
-	//void updateRoad(std::string&,int,int,int) = 0;
-    //void updateIntersection(V,float) = 0; //add update vector of adj intersections
+	float getExponential(int, float);
 };
+
+template<class V>
+Map<V>::Map() {
+	std::cout << "Creating map...";
+}
 
 template<class V>
 Map<V>::Map(std::string &f) {
@@ -112,86 +113,12 @@ Map<V>::Map(std::string &f) {
 				curr->setNextIntersection(new Intersection<V>(dest, congestion));
 				std::cout << "new Intersection and destination added." << std::endl;
 			}
-
 		}
-
 	}
 	else{
 		std::cout << "\nData file '" << f << "', not found.\n";
 	}
 }
-
-template<class V>
-void Map<V>::calculateDijkstrasSP(const V& u) {
-	/* djikstras algorithm adapted from
-	https://www.includehelp.com/cpp-tutorial/dijkstras-algorithm.aspx
-	*/
-
-	bool visited[no_Intersections];
-	float distance[no_Intersections];
-
-	//init adj_matrix, adj = 0, all others at inf
-	/*
-	for (int i = 0; i < no_Intersections; i++)
-		for (int j = 0; j < no_Intersections; j++)
-			if (i == j) adj_matrix[i][j] = 0;
-			else adj_matrix[i][j] = inf;
-	
-	//populate adj_matrix from adjListV
-	if (!adjListV.empty()) {
-		for (Intersection<V> *Intersec : adjListV) {
-			Intersection<V> *curr = Intersec;
-
-			while(curr->getNextIntersection() != nullptr) {
-				adj_matrix[Intersec->getIntersectionValue()][curr->getNextIntersection()->getIntersectionValue()] = curr->getNextIntersection()->getIntersectionCongestion();
-				curr = curr->getNextIntersection();
-			}
-		}
-	}
-	*/
-
-	printAdjMatrix(true); //true; prints 10 rows only
-
-	// calculate distance using djikstra's
-	//u's distance to itself = 0
-	for (int k = 0; k < no_Intersections; k++) {
-		visited[k] = false;
-		distance[k] = inf;
-	}
-	distance[u] = 0;
-
-	for (int count = 0; count < no_Intersections; count++){
-		int v = findSmallestUnvisitedIntersection(visited, distance);		//v is to be added next
-		visited[v] = true;											//add v to visited Intersections
-		for (int i = 0; i < no_Intersections; i++){
-			/*Update dist[v] if not in Dset and their is a path from src to v through u that has distance minimum than current value of dist[v]*/
-		
-			if (!visited[i] && adj_matrix[v][i] != inf && distance[v] != inf)
-				if(distance[v] + adj_matrix[v][i] < distance[i])
-					distance[i] = distance[v] + adj_matrix[v][i];
-		}
-	}
-
-	std::cout << "Distances:" << std::endl;
-	for (int i = 0; i < no_Intersections; i++) {
-		if (distance[i] == inf) std::cout << u << "--->" << i << " with distance " << static_cast<unsigned char>(236) << std::endl;
-		else std::cout << u << "--->" << i << " with distance " << distance[i] << std::endl;
-	}
-
-}
-
-template<class V>
-int Map<V>::findSmallestUnvisitedIntersection(bool visited[], float distance[]) {
-		int min = inf, smallest_congestion_Intersection;
-		for (int i = 0; i < no_Intersections; i++){
-			if (!visited[i] && distance[i] <= min){
-				min = distance[i];
-				smallest_congestion_Intersection = i;
-			}
-		}
-		return smallest_congestion_Intersection;
-}
-
 
 // print adjacency list representation of Map
 template<class V>
@@ -235,7 +162,6 @@ void Map<V>::printAdjMatrix(bool print_head) const {
 	}
 		
 }
-
 
 template<class V>
 float Map<V>::getExponential(int n, float x)
