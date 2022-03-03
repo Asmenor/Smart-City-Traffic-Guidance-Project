@@ -15,6 +15,7 @@ public:
     ProactiveRouting(std::string&);
     void printAllRoads() const;
 	void printAdjacencyMatrix() const;
+	void printAdjacencyList() const;
     void calculateDijkstrasSP(const V&);
 	int findSmallestUnvisitedIntersection(bool[], float[]);
 
@@ -40,6 +41,12 @@ void ProactiveRouting<V>::printAdjacencyMatrix() const{
 }
 
 template<class V>
+void ProactiveRouting<V>::printAdjacencyList() const{
+    //load f and create Map
+    manhattan.printAdjList();
+}
+
+template<class V>
 void ProactiveRouting<V>::calculateDijkstrasSP(const V& u) {
 	/* djikstras algorithm adapted from
 	https://www.includehelp.com/cpp-tutorial/dijkstras-algorithm.aspx
@@ -48,7 +55,7 @@ void ProactiveRouting<V>::calculateDijkstrasSP(const V& u) {
 	bool visited[no_intersections];
 	float distance[no_intersections];
 	float **adj_matrix = manhattan.getAdjacencyMatrix();
-	std::vector<Intersection<V>*> adj_list = manhattan.getAdjacencyList();
+	std::vector<Road<V>*> adj_list = manhattan.getAdjacencyList();
 
 	//init adj_matrix, adj = 0, all others at inf
 	/*
