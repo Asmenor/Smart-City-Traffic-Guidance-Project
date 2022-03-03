@@ -72,7 +72,7 @@ Map<V>::Map(std::string &f) {
 
 	//read <city>.csv file and load road information
 	//https://www.new-york-city-map.com/manhattan.htm
-	std::ifstream dataFile(f);
+	std::ifstream dataFile(f.c_str());
 	std::string line;
 	std::getline (dataFile, line); //ignore header
 	if ( dataFile.is_open() ) {
@@ -87,15 +87,15 @@ Map<V>::Map(std::string &f) {
 			
 			//Add Road
 			RoadV.push_back(new Road<V>(name, src, dest, static_cast<int>(x_m * getExponential(20, dist(rng))),20,3));
-			//end Add Road
+			//end
 
-			float congestion = 0.0;//= RoadV[RoadV.size - 1].getCongestion();
+			float congestion = RoadV[RoadV.size() - 1]->getCongestion();
 			std::cout << std::fixed << "\nadding: " << src << "----(" << congestion << ")----" << dest << std::endl;
 
 			/*Add congestion value to adj matrix*/
 			adj_matrix[src][dest] = congestion;
 
-
+			/*
 			if (! adjListV.empty()) {
 				for (Intersection<V> *Intersection : adjListV) {
 					if (src == Intersection->getIntersectionValue()) {
@@ -127,6 +127,7 @@ Map<V>::Map(std::string &f) {
 				curr->setNextIntersection(new Intersection<V>(dest, congestion));
 				std::cout << "new Intersection and destination added." << std::endl;
 			}
+			*/
 		}
 	}
 	else{
