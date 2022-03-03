@@ -25,17 +25,20 @@ class Map
 {
 	std::vector<Intersection<V>*> adjListV;
 	std::vector<Road<V>*> RoadV;
-	float **adj_matrix; //no_Intersections][no_Intersections];
+	float **adj_matrix;
 
 public:
 	//Constructor (populates Map)
 	Map();
 	Map(std::string&);
+	bool updateMap();										//updates the map with latest congestion data
 	void printAdjList() const;
 	void printAdjMatrix(bool) const;
-	void printRoadMap() const;
-	float getExponential(int, float);
-	float** getAdjacencyMatrix() const;
+	void printRoads() const;
+	float getExponential(int, float);						//used for generating Pareto RV.
+	float** getAdjacencyMatrix() const;						//returns a 2D adjacency matrix
+	std::vector<Intersection<V>*> getAdjacencyList() const;	//returns the adjacency list vector
+	
 };
 
 template<class V>
@@ -135,6 +138,11 @@ Map<V>::Map(std::string &f) {
 	}
 }
 
+template<class V>
+bool updateMap(){
+	std::cout << "reloading file, updating map";
+	return true;
+}
 // print adjacency list representation of Map
 template<class V>
 void Map<V>::printAdjList() const {
@@ -190,7 +198,7 @@ float Map<V>::getExponential(int n, float x)
 }
 
 template<class V>
-void Map<V>::printRoadMap() const{
+void Map<V>::printRoads() const{
 	std::cout << "Roads:\n";
 	for( auto x : RoadV){
 		std::cout << x->getName() << " " << x->getSrc() << " "  << x->getDst() << " "  << x->getCongestion() << "\n" ;
@@ -200,6 +208,11 @@ void Map<V>::printRoadMap() const{
 template<class V>
 float** Map<V>::getAdjacencyMatrix() const{
 	return adj_matrix;
+}
+
+template<class V>
+std::vector<Intersection<V>*> Map<V>::getAdjacencyList() const{
+	return adjListV;
 }
 
 #endif
