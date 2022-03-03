@@ -51,7 +51,7 @@ template<class V>
 Map<V>::Map(std::string &f) {
 	std::cout << "Loading data file...\n";
 	V s = 0;
-	adjListV.push_back(new Road<V>()); //dummy intersection
+	//adjListV.push_back(new Road<V>()); //dummy intersection
 
 	//for Pareto Random Variable
 	boost::random::mt19937 rng(time(0));
@@ -78,13 +78,19 @@ Map<V>::Map(std::string &f) {
 	std::string line;
 	std::getline (dataFile, line); //ignore header
 
-	Road<V>* temp;
+	
 
 	if ( dataFile.is_open() ) {
+		bool RoadExists = false;
+		bool uTurn = false;
+		float congestion;
+		Road<V>* temp;
+		Road<V> *curr;
 		while ( dataFile ) {
 			std::getline (dataFile, line);
 
-			bool RoadExists = false;
+			RoadExists = false;
+			uTurn = false;
 			std::string name = split(line,',',1,true);
 			V src = split(line,',',2);
 			V dest = split(line,',',3);
@@ -94,7 +100,7 @@ Map<V>::Map(std::string &f) {
 			RoadV.push_back(new Road<V>(name, src, dest, static_cast<int>(x_m * getExponential(20, dist(rng))),20,3));
 			//end
 
-			float congestion = RoadV[RoadV.size() - 1]->getCongestion();
+			congestion = RoadV[RoadV.size() - 1]->getCongestion();
 			//std::cout << std::fixed << "\nadding: " << src << "----(" << congestion << ")----" << dest << std::endl;
 
 			/*Add congestion value to adj matrix*/
@@ -102,27 +108,34 @@ Map<V>::Map(std::string &f) {
 
 			//populate adjacency list
 			if (! adjListV.empty()) {
-				for (Road<V> *Road : adjListV) {
-					if (src == Road->getDst()) { //check src dst links
-						RoadExists = true;
-						temp = Road;
+				for (Road<V> *Rd : adjListV) {
+					if (src == Rd->getDst()) { //check src dst links (check src and destination)
+						//RoadExists = true;
+						temp = Rd;
 						break;
 					}
 				}
 			}
+			//3-4 is a road in itself AND it is connected to 2-3 and 4-5
 
 			std::cout << name << (RoadExists ? " exists" : " does not exist") << std::endl;
 
 			if (RoadExists) {
-				std::cout << "(\"" << temp->getName() << "\" S:" << temp->getSrc() << " D:" << temp->getDst() << ")";
-				//Add road at the end of list connected to vector |  Road  |->... |  Road  |->nullptr
-				Road<V> *curr = temp;//findRoad(src,dest);
+				uTurn = (temp->getDst() == src && temp->getSrc() == dest); //true if road is a u-turn
+				if (!uTurn){
+					std::cout << "(\"" << temp->getName() << "\" S:" << temp->getSrc() << " D:" << temp->getDst() << ")";
+					//Add road at the end of list connected to vector |  Road  |->... |  Road  |->nullptr
+					curr = temp;//findRoad(src,dest);
 
-				while (curr->getNextRoad() != nullptr)
-					curr = curr->getNextRoad();
-
-				curr->setNextRoad(new Road<V>(name, src, dest, congestion,20,3));
-				std::cout << "--> \""<< name << "\" " << src << " " << dest << " added." << std::endl;
+					while (curr->getNextRoad() != nullptr)
+						curr = curr->getNextRoad();
+					
+					curr->setNextRoad(new Road<V>(name, src, dest, congestion,20,3));
+					std::cout << "--> \""<< name << "\" " << src << " " << dest << " added." << std::endl;
+				}
+				else{
+					std::cout << "----ignoring u-turn\n";
+				}
 			}
 			else {
 				std::cout << "(First) \""<< name << "\" " << src << " " << dest << " added." << std::endl;
@@ -184,14 +197,15 @@ bool updateMap(){
 template<class V>
 void Map<V>::printAdjList() const {
 	std::cout << std::endl << "Adjacency list..." << std::endl;
+	Road<V> *curr = nullptr;
 	for (Road<V> *Rd : adjListV) {
 		// print all neighboring vertices of given vertex
-		Road<V> *curr = Rd;
+		curr = Rd;
 		std::cout << curr->getName() << "[" << curr->getSrc() << "," << curr->getDst() << "]"; //print Road name
 		if(curr->getNextRoad() != nullptr){
 			curr = curr->getNextRoad();
 			while (curr != nullptr){
-				std::cout << " --> [" << curr->getName() << ",C(" << curr->getCongestion() << ")]"; //print adjacent Roads
+				std::cout << " --> [\"" << curr->getName() << "\" " << curr->getSrc() << "," << curr->getDst() << " ,C(" << curr->getCongestion() << ")]"; //print adjacent Roads
 				curr = curr->getNextRoad(); //move to next adjacent Road
 			}
 			std::cout << std::endl;
