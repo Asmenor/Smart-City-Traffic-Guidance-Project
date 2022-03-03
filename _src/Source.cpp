@@ -5,20 +5,23 @@ Email: alihaider1@outlook.com
 
 #include "_include/Map.h"
 #include "_include/ProactiveRouting.h"
+//#include "_include/ReactiveRouting.h"
+//#include "_include/HierarchicalRouting.h"
+//#include "_include/MLRouting.h"
 #include <string>
 
 int main()
 {
 
-	//road and intersection information
-	std::string f = "_data/manhattan.dat";
+	//road,intersection, no of cars information
+	std::string f = "manhattan.csv";
 
 	ProactiveRouting<int> PR(f);
 	
 	// calculate shortest path from node u=1
-	//manhattan.calculateDijkstrasSP(61);
-	//manhattan.printAdjList();
-	PR.printMap();
+	//PR.calculateDijkstrasSP(61);
+	//PR.printAdjacencyMatrix();
+	//PR.printMap();
 
 	return 0;
 }

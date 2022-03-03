@@ -6,9 +6,6 @@
 #include "Map.h"
 
 
-//const int inf = 0.0; 
-//const int no_Intersections = 100;   //remove and make dynamic
-
 template <class V>
 class ProactiveRouting {
     
@@ -17,6 +14,7 @@ class ProactiveRouting {
 public:
     ProactiveRouting(std::string&);
     void printMap() const;
+	void printAdjacencyMatrix() const;
     void calculateDijkstrasSP(const V&);
 	int findSmallestUnvisitedIntersection(bool[], float[]);
 
@@ -36,13 +34,20 @@ void ProactiveRouting<V>::printMap() const{
 }
 
 template<class V>
+void ProactiveRouting<V>::printAdjacencyMatrix() const{
+    //load f and create Map
+    manhattan.printAdjMatrix(true);
+}
+
+template<class V>
 void ProactiveRouting<V>::calculateDijkstrasSP(const V& u) {
 	/* djikstras algorithm adapted from
 	https://www.includehelp.com/cpp-tutorial/dijkstras-algorithm.aspx
 	*/
     
-	bool visited[no_Intersections];
-	float distance[no_Intersections];
+	bool visited[no_intersections];
+	float distance[no_intersections];
+	float **adj_matrix = manhattan.getAdjacencyMatrix();
 
 	//init adj_matrix, adj = 0, all others at inf
 	/*
@@ -63,20 +68,20 @@ void ProactiveRouting<V>::calculateDijkstrasSP(const V& u) {
 		}
 	}
 	*/
-	//printAdjMatrix(true); //true; prints 10 rows only
+	//manhattan.printAdjMatrix(true); //true; prints 10 rows only
 
 	// calculate distance using djikstra's
 	//u's distance to itself = 0
-	for (int k = 0; k < no_Intersections; k++) {
+	for (int k = 0; k < no_intersections; k++) {
 		visited[k] = false;
 		distance[k] = inf;
 	}
 	distance[u] = 0;
 
-	for (int count = 0; count < no_Intersections; count++){
+	for (int count = 0; count < no_intersections; count++){
 		int v = findSmallestUnvisitedIntersection(visited, distance);		//v is to be added next
 		visited[v] = true;											//add v to visited Intersections
-		for (int i = 0; i < no_Intersections; i++){
+		for (int i = 0; i < no_intersections; i++){
 			/*Update dist[v] if not in Dset and their is a path from src to v through u that has distance minimum than current value of dist[v]*/
 		
 			if (!visited[i] && adj_matrix[v][i] != inf && distance[v] != inf)
@@ -86,7 +91,7 @@ void ProactiveRouting<V>::calculateDijkstrasSP(const V& u) {
 	}
 
 	std::cout << "Distances:" << std::endl;
-	for (int i = 0; i < no_Intersections; i++) {
+	for (int i = 0; i < no_intersections; i++) {
 		if (distance[i] == inf) std::cout << u << "--->" << i << " with distance " << static_cast<unsigned char>(236) << std::endl;
 		else std::cout << u << "--->" << i << " with distance " << distance[i] << std::endl;
 	}
@@ -96,7 +101,7 @@ void ProactiveRouting<V>::calculateDijkstrasSP(const V& u) {
 template<class V>
 int ProactiveRouting<V>::findSmallestUnvisitedIntersection(bool visited[], float distance[]) {
 		int min = inf, smallest_congestion_Intersection;
-		for (int i = 0; i < no_Intersections; i++){
+		for (int i = 0; i < no_intersections; i++){
 			if (!visited[i] && distance[i] <= min){
 				min = distance[i];
 				smallest_congestion_Intersection = i;

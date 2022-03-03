@@ -16,14 +16,17 @@
 
 
 const int inf = 0.0;
-const int no_Intersections = 100;  //remove and make dynamic
+const int ROWS = 20;
+const int COLS = 5;
+const int no_intersections = ROWS * COLS;  //remove and make dynamic
 
 template<class V>
 class Map
 {
 	std::vector<Intersection<V>*> adjListV;
 	std::vector<Road<V>*> RoadV;
-	float adj_matrix[no_Intersections][no_Intersections];
+	float **adj_matrix; //no_Intersections][no_Intersections];
+
 public:
 	//Constructor (populates Map)
 	Map();
@@ -32,15 +35,17 @@ public:
 	void printAdjMatrix(bool) const;
 	void printRoadMap() const;
 	float getExponential(int, float);
+	float** getAdjacencyMatrix() const;
 };
 
 template<class V>
 Map<V>::Map() {
-	std::cout << "Creating map...";
+	std::cout << "Map obj created...\n";
 }
 
 template<class V>
 Map<V>::Map(std::string &f) {
+	std::cout << "Loading data file...\n";
 	V s = 0;
 	adjListV.push_back(new Intersection<V>(s)); //dummy intersection
 
@@ -51,14 +56,23 @@ Map<V>::Map(std::string &f) {
 	
 	/*Init Adjacency Matrix*/
 	//init adj_matrix, adj = 0, all others at inf
-	for (int i = 0; i < no_Intersections; i++)
-		for (int j = 0; j < no_Intersections; j++)
+	
+	adj_matrix = new float*[no_intersections];
+
+	for(int i=0;i<no_intersections;i++){
+		adj_matrix[i] = new float[no_intersections];
+	}
+
+	for (int i = 0; i < no_intersections; i++)
+		for (int j = 0; j < no_intersections; j++){
+			//std::cout << i << " " << j << "\n";
 			adj_matrix[i][j] = 0.0;
+		}
 	/**/
 
-	//read <city>.dat file and load road information
+	//read <city>.csv file and load road information
 	//https://www.new-york-city-map.com/manhattan.htm
-	std::ifstream dataFile (f);
+	std::ifstream dataFile(f);
 	std::string line;
 	std::getline (dataFile, line); //ignore header
 	if ( dataFile.is_open() ) {
@@ -144,9 +158,9 @@ void Map<V>::printAdjMatrix(bool print_head) const {
 	if(print_head)
 		inter = 10;
 	else
-		inter = no_Intersections;
+		inter = no_intersections;
 
-	std::cout << std::endl << "Adjacency matrix..." << std::endl;
+	std::cout << std::endl << "Adjacency matrix...(printing head=" << (print_head ? "true" : "false") << ")\n";
 	std::cout << "\t";
 	for (int i = 0; i < inter; i++) {
 		std::cout << i << "\t";
@@ -180,6 +194,11 @@ void Map<V>::printRoadMap() const{
 	for( auto x : RoadV){
 		std::cout << x->getName() << " " << x->getSrc() << " "  << x->getDst() << " "  << x->getCongestion() << "\n" ;
 	}
+}
+
+template<class V>
+float** Map<V>::getAdjacencyMatrix() const{
+	return adj_matrix;
 }
 
 #endif

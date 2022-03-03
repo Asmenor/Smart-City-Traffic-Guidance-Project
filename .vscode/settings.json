@@ -69,6 +69,9 @@
         "*.tcc": "cpp",
         "memory_resource": "cpp",
         "numeric": "cpp",
-        "random": "cpp"
+        "random": "cpp",
+        "strstream": "cpp",
+        "cfenv": "cpp",
+        "cinttypes": "cpp"
     }
 }
