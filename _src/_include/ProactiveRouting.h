@@ -13,7 +13,7 @@ class ProactiveRouting {
 
 public:
     ProactiveRouting(std::string&);
-    void printMap() const;
+    void printAllRoads() const;
 	void printAdjacencyMatrix() const;
     void calculateDijkstrasSP(const V&);
 	int findSmallestUnvisitedIntersection(bool[], float[]);
@@ -28,9 +28,9 @@ ProactiveRouting<V>::ProactiveRouting(std::string &f){
 }
 
 template<class V>
-void ProactiveRouting<V>::printMap() const{
+void ProactiveRouting<V>::printAllRoads() const{
     //load f and create Map
-    manhattan.printRoadMap();
+    manhattan.printRoads();
 }
 
 template<class V>
@@ -48,6 +48,7 @@ void ProactiveRouting<V>::calculateDijkstrasSP(const V& u) {
 	bool visited[no_intersections];
 	float distance[no_intersections];
 	float **adj_matrix = manhattan.getAdjacencyMatrix();
+	std::vector<Intersection<V>*> adj_list = manhattan.getAdjacencyList();
 
 	//init adj_matrix, adj = 0, all others at inf
 	/*
