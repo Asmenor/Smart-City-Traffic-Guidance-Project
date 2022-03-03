@@ -14,6 +14,7 @@ class Road {
 	int no_of_cars;
 	float avg_speed; //mph
 	int no_of_lanes;
+	Road<V> *next;
 
 public:
 	Road(): name("no name"), src(0),dst(0),Congestion(0.0), length_segment(0.0), no_of_cars(0), avg_speed(0.0), no_of_lanes(0)  {}
@@ -44,6 +45,8 @@ public:
 	std::string getName() const { return name;}
 	float getLength() const { return length_segment; }
 	void setLength(const float& l) { length_segment = l; }
+	Road<V>* getNextRoad() const{return next;}
+	void setNextRoad(Road<V>* nextRoad){next = nextRoad;}
 
 };
 
