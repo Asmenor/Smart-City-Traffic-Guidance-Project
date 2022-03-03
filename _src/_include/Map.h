@@ -77,6 +77,9 @@ Map<V>::Map(std::string &f) {
 	std::ifstream dataFile(f.c_str());
 	std::string line;
 	std::getline (dataFile, line); //ignore header
+
+	Road<V>* temp;
+
 	if ( dataFile.is_open() ) {
 		while ( dataFile ) {
 			std::getline (dataFile, line);
@@ -92,7 +95,7 @@ Map<V>::Map(std::string &f) {
 			//end
 
 			float congestion = RoadV[RoadV.size() - 1]->getCongestion();
-			std::cout << std::fixed << "\nadding: " << src << "----(" << congestion << ")----" << dest << std::endl;
+			//std::cout << std::fixed << "\nadding: " << src << "----(" << congestion << ")----" << dest << std::endl;
 
 			/*Add congestion value to adj matrix*/
 			adj_matrix[src][dest] = congestion;
@@ -100,28 +103,29 @@ Map<V>::Map(std::string &f) {
 			//populate adjacency list
 			if (! adjListV.empty()) {
 				for (Road<V> *Road : adjListV) {
-					if (src == Road->getSrc() && dest == Road->getDst()) {
+					if (src == Road->getDst()) { //check src dst links
 						RoadExists = true;
+						temp = Road;
 						break;
 					}
 				}
 			}
 
-			std::cout << src << (RoadExists ? " exists" : " does not exist") << std::endl;
+			std::cout << name << (RoadExists ? " exists" : " does not exist") << std::endl;
 
 			if (RoadExists) {
-				std::cout << "updating adjacent to (Road:" << src << " Dest:" << dest << ")";
+				std::cout << "(\"" << temp->getName() << "\" S:" << temp->getSrc() << " D:" << temp->getDst() << ")";
 				//Add road at the end of list connected to vector |  Road  |->... |  Road  |->nullptr
-				Road<V> *curr = findRoad(src,dest);
+				Road<V> *curr = temp;//findRoad(src,dest);
 
 				while (curr->getNextRoad() != nullptr)
 					curr = curr->getNextRoad();
 
 				curr->setNextRoad(new Road<V>(name, src, dest, congestion,20,3));
-				std::cout << "--> "<< name << " " <<dest << " added." << std::endl;
+				std::cout << "--> \""<< name << "\" " << src << " " << dest << " added." << std::endl;
 			}
 			else {
-				std::cout << "adding...";
+				std::cout << "(First) \""<< name << "\" " << src << " " << dest << " added." << std::endl;
 				//Add road to vector |  Road  |->nullptr
 				adjListV.push_back(new Road<V>(name, src, dest, congestion,20,3));
 				
