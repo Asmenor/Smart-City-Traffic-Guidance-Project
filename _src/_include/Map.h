@@ -15,7 +15,7 @@
 #include <boost/range/irange.hpp>
 
 
-const int inf = 0.0;
+const float inf = 100.0;
 const int ROWS = 20;
 const int COLS = 5;
 const int no_intersections = ROWS * COLS;  //remove and make dynamic
@@ -39,7 +39,7 @@ public:
 	float** getAdjacencyMatrix() const;					//returns a 2D adjacency matrix
 	std::vector<Road<V>*> getAdjacencyList() const;		//returns the adjacency list vector
 	Road<V>* findRoad(V, V) const;
-	
+	std::vector<Road<V>*> getRoads() const;				//returns the roads vector
 };
 
 template<class V>
@@ -66,10 +66,14 @@ Map<V>::Map(std::string &f) {
 		adj_matrix[i] = new float[no_intersections];
 	}
 
-	for (int i = 0; i < no_intersections; i++)
-		for (int j = 0; j < no_intersections; j++){
-			adj_matrix[i][j] = 0.0;
+	//THIS ALTERED
+	for (int i = 0; i < no_intersections; i++) {
+		for (int j = 0; j < no_intersections; j++) {
+			//std::cout << i << " " << j << "\n";
+			if (i == j) adj_matrix[i][j] = 0.0;
+			else adj_matrix[i][j] = inf;
 		}
+	}
 	/**/
 
 	//read <city>.csv file and load road information
@@ -88,18 +92,34 @@ Map<V>::Map(std::string &f) {
 			std::string name = split(line,',',1,true);
 			V src = split(line,',',2);
 			V dest = split(line,',',3);
+			//added new parameters here
+			float avg_speed = split(line, ',', 4);
+			int no_of_cars = split(line, ',', 5);
+			//bool indicates a return type of float if true
+			float length_segment = split(true, line, ',', 6);
 			
 			
-			//Add Road
+			/* DEPRECATED?
 			RoadV.push_back(new Road<V>(name, src, dest, static_cast<int>(x_m * getExponential(20, dist(rng))),20,3));
+			*/
+
+			//Add Road
+			RoadV.push_back(new Road<V>(name, src, dest, no_of_cars, length_segment, avg_speed));
 			//end
 
+			/* DEPRECATED?
 			float congestion = RoadV[RoadV.size() - 1]->getCongestion();
 			//std::cout << std::fixed << "\nadding: " << src << "----(" << congestion << ")----" << dest << std::endl;
+			*/
 
-			/*Add congestion value to adj matrix*/
+			std::cout << std::fixed << "\nadding: " << src << "-->" << dest << std::endl;
+
+			/* DEPRECATED?
+			//Add congestion value to adj matrix
 			adj_matrix[src][dest] = congestion;
+			*/
 
+			/* DEPRECATED?
 			//populate adjacency list
 			if (! adjListV.empty()) {
 				for (Road<V> *Road : adjListV) {
@@ -133,6 +153,7 @@ Map<V>::Map(std::string &f) {
 				//Road<V> *curr = adjListV.at(src);
 				//curr->setNextIntersection(new Intersection<V>(dest, congestion));
 				//std::cout << "new Intersection and destination added." << std::endl;
+			*/
 
 			/*
 			if (! adjListV.empty()) {
@@ -167,7 +188,6 @@ Map<V>::Map(std::string &f) {
 				std::cout << "new Intersection and destination added." << std::endl;
 			}
 			*/
-			}
 		}
 	}
 	else{
@@ -263,6 +283,11 @@ Road<V>* Map<V>::findRoad(V src, V dst) const{
 			return x;
 	}
 	return nullptr;
+}
+
+template<class V>
+std::vector<Road<V>*> Map<V>::getRoads() const {
+	return RoadV;
 }
 
 #endif
