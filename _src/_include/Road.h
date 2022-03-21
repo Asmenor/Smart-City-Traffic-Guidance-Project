@@ -18,6 +18,7 @@ class Road {
 
 public:
 	Road(): name("no name"), src(0),dst(0),Congestion(0.0), length_segment(0.0), no_of_cars(0), avg_speed(0.0), no_of_lanes(0)  {}
+	/* DEPRECATED?
 	Road(std::string& n, const V& s, const V& d, const int& no, const float& v, const float& l){
 		name = n;
 		src = s;
@@ -26,6 +27,19 @@ public:
 		no_of_cars = no;
 		avg_speed = v;
 		no_of_lanes = l;
+		Congestion = no_of_cars / (no_of_lanes * avg_speed);
+
+	}
+	*/
+
+	Road(std::string& n, const V& s, const V& d, const int& nc, const float& ls, const float& v) {
+		name = n;
+		src = s;
+		dst = d;
+		no_of_cars = nc;
+		length_segment = ls;
+		avg_speed = v;
+		no_of_lanes = 1;
 		Congestion = no_of_cars / (no_of_lanes * avg_speed);
 
 	}
@@ -47,6 +61,8 @@ public:
 	void setLength(const float& l) { length_segment = l; }
 	Road<V>* getNextRoad() const{return next;}
 	void setNextRoad(Road<V>* nextRoad){next = nextRoad;}
+	int getNumCars() const { return no_of_cars; }
+	float getAvgSpeed() const { return avg_speed; }
 
 };
 
