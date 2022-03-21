@@ -1,3 +1,5 @@
+11th Ave,0,1
+11th Ave,1,0
 11th Ave,1,2
 11th Ave,2,1
 11th Ave,2,3
@@ -34,10 +36,8 @@
 11th Ave,18,17
 11th Ave,18,19
 11th Ave,19,18
-11th Ave,19,20
-11th Ave,20,19
-11th Ave,20,21
-11th Ave,21,20
+10th Ave,20,21
+10th Ave,21,20
 10th Ave,21,22
 10th Ave,22,21
 10th Ave,22,23
@@ -74,10 +74,8 @@
 10th Ave,38,37
 10th Ave,38,39
 10th Ave,39,38
-10th Ave,39,40
-10th Ave,40,39
-10th Ave,40,41
-10th Ave,41,40
+9th Ave,40,41
+9th Ave,41,40
 9th Ave,41,42
 9th Ave,42,41
 9th Ave,42,43
@@ -114,10 +112,8 @@
 9th Ave,58,57
 9th Ave,58,59
 9th Ave,59,58
-9th Ave,59,60
-9th Ave,60,59
-9th Ave,60,61
-9th Ave,61,60
+8th Ave,60,61
+8th Ave,61,60
 8th Ave,61,62
 8th Ave,62,61
 8th Ave,62,63
@@ -154,10 +150,8 @@
 8th Ave,78,77
 8th Ave,78,79
 8th Ave,79,78
-8th Ave,79,80
-8th Ave,80,79
-8th Ave,80,81
-8th Ave,81,80
+7th Ave,80,81
+7th Ave,81,80
 7th Ave,81,82
 7th Ave,82,81
 7th Ave,82,83
