@@ -11,8 +11,8 @@
 #include "Split.h"
 #include <iomanip>
 //for pareto random variables
-#include <boost/random.hpp>
-#include <boost/range/irange.hpp>
+//#include <boost/random.hpp>
+//#include <boost/range/irange.hpp>
 
 
 const float inf = 100.0;
@@ -54,8 +54,8 @@ Map<V>::Map(std::string &f) {
 	//adjListV.push_back(new Road<V>()); //dummy intersection
 
 	//for Pareto Random Variable
-	boost::random::mt19937 rng(time(0));
-    boost::random::exponential_distribution<> dist(1.0);
+	//boost::random::mt19937 rng(time(0));
+    //boost::random::exponential_distribution<> dist(1.0);
     float x_m = 1;
 	
 	/*Init Adjacency Matrix*/
@@ -88,7 +88,7 @@ Map<V>::Map(std::string &f) {
 		bool RoadExists = false;
 		bool uTurn = false;
 		float congestion;
-		Road<V>* temp;
+		Road<V>* temp = NULL;
 		Road<V> *curr;
 		V src;
 		V dest;
@@ -147,6 +147,7 @@ Map<V>::Map(std::string &f) {
 				}
 			}
 			//3-4 is a road in itself AND it is connected to 2-3 and 4-5
+			
 
 			std::cout << name << (RoadExists ? " exists" : " does not exist") << std::endl;
 

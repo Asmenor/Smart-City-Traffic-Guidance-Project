@@ -16,7 +16,7 @@ struct Data {
 	int numCars;
 	float segLen;
 };
-
+/*Some changes*/
 class DataGenerator {
 
 
