@@ -82,7 +82,7 @@ void ReactiveRouting<V>::calculateSP(const V& s, const V& t) {
 	// print adj_list
 	printAdjacencyList(adj_list);
 
-	// calculate distance
+	// calculate distance (congestion)
 	for (int k = 0; k < no_intersections; k++) {
 		visited[k] = false;
 		distance[k] = inf;
@@ -92,7 +92,7 @@ void ReactiveRouting<V>::calculateSP(const V& s, const V& t) {
 	distance[s] = 0.0;
 	least_congested_intrsctn = s;
 
-	//update path at source; all paths will originate here
+	//update path at source; all paths originate from s
 	pathToDest[s].push_back(s);
 
 	while (least_congested_intrsctn != t) {
@@ -100,15 +100,15 @@ void ReactiveRouting<V>::calculateSP(const V& s, const V& t) {
 		adjIntersectionsRemain = true;
 
 		while (adjIntersectionsRemain) {
-			int nextAdjWeightValue = getNextAdjIntersection(least_congested_intrsctn, adj_list);
+			int nextAdjIntersection = getNextAdjIntersection(least_congested_intrsctn, adj_list);
 			float nextAdjWeight = getNextAdjWeight(least_congested_intrsctn, adj_list, adjIntersectionsRemain);
 			//place weight in distance[] if less than current
-			if ((distance[least_congested_intrsctn] + nextAdjWeight < distance[nextAdjWeightValue])
-				&& (visited[nextAdjWeightValue] == false)) {
-				distance[nextAdjWeightValue] = distance[least_congested_intrsctn] + nextAdjWeight;
+			if ((distance[least_congested_intrsctn] + nextAdjWeight < distance[nextAdjIntersection])
+				&& (!visited[nextAdjIntersection])) {
+				distance[nextAdjIntersection] = distance[least_congested_intrsctn] + nextAdjWeight;
 				//update path
-				pathToDest[nextAdjWeightValue] = pathToDest[least_congested_intrsctn];
-				pathToDest[nextAdjWeightValue].push_back(nextAdjWeightValue);
+				pathToDest[nextAdjIntersection] = pathToDest[least_congested_intrsctn];
+				pathToDest[nextAdjIntersection].push_back(nextAdjIntersection);
 			}
 			//mark least congested unvisited intersection in distance[]
 			marked = findLeastCongestedIntersection(visited, distance);
@@ -126,9 +126,9 @@ void ReactiveRouting<V>::calculateSP(const V& s, const V& t) {
 }
 
 template<class V>
-float ReactiveRouting<V>::calculateCF(const int& c, const float& m, const float& v) {
+float ReactiveRouting<V>::calculateCF(const int& c, const float& l, const float& v) {
 	float cf;
-	cf = (c / (352 * m)) / v;
+	cf = (c / (352 * l)) / v;
 	return cf;
 }
 
@@ -141,7 +141,7 @@ void ReactiveRouting<V>::printAdjacencyList(const std::vector<Intersection<V>*>&
 		std::cout << curr->getIntersectionValue(); //print Map Intersection
 		curr = curr->getNextIntersection();
 		while (curr != nullptr) {
-			std::cout << " --> [" << curr->getIntersectionValue() << ",C(" << curr->getIntersectionCongestion() << ")]"; //print adjacent Intersections to Map Intersection
+			std::cout << " --> [" << curr->getIntersectionValue() << ",C(" << std::setprecision(4) << curr->getIntersectionCongestion() << ")]"; //print adjacent Intersections to Map Intersection
 			curr = curr->getNextIntersection(); //move to next adjacent Intersection
 		}
 		std::cout << std::endl;
@@ -150,9 +150,8 @@ void ReactiveRouting<V>::printAdjacencyList(const std::vector<Intersection<V>*>&
 
 template<class V>
 int ReactiveRouting<V>::getNextAdjIntersection(int lwi, const std::vector<Intersection<V>*>& al) const {
-	Intersection<V>* root = al.at(lwi);
-	Intersection<V>* curr = root->getNextIntersection();
-	int result = curr->getIntersectionValue();
+	Intersection<V>* curr = al.at(lwi);
+	int result = curr->getNextIntersection()->getIntersectionValue();
 	return result;
 }
 
@@ -160,14 +159,13 @@ template<class V>
 float ReactiveRouting<V>::getNextAdjWeight(int lwi, std::vector<Intersection<V>*>& al, bool& air) {
 	Intersection<V>* root = al.at(lwi);
 	Intersection<V>* temp = root->getNextIntersection();
-	Intersection<V>* curr = temp->getNextIntersection();
 
 	float result = temp->getIntersectionCongestion();
 
-	root->setNextIntersection(curr);
+	root->setNextIntersection(temp->getNextIntersection());
 	delete temp;
 
-	if (curr == nullptr) air = false;
+	if (root->getNextIntersection() == nullptr) air = false;
 
 	return result;
 }

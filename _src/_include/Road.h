@@ -42,6 +42,7 @@ public:
 
 	void setName(std::string& n) { name = n; }
 	float getCongestion() const { return Congestion; }
+	void setCongestion(const float& c) { Congestion = c; }
 	void setSrcDst(const V& s, const V& d) { src = s; dst = d; }
 	V getSrc() const { return src; }
 	V getDst() const { return dst; }
