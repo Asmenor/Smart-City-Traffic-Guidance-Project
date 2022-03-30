@@ -90,6 +90,7 @@ Map<V>::Map(std::string &f) {
 		float congestion;
 		Road<V>* temp = NULL;
 		Road<V> *curr;
+		std::string name;
 		V src;
 		V dest;
 		float avg_speed;
@@ -102,7 +103,7 @@ Map<V>::Map(std::string &f) {
 
 			RoadExists = false;
 			uTurn = false;
-			std::string name = split(line,',',1,true);
+			name = split(line,',',1,true);
 			src = split(line,',',2);
 			dest = split(line,',',3);
 			//added new parameters here
@@ -139,8 +140,8 @@ Map<V>::Map(std::string &f) {
 			//populate adjacency list
 			if (! adjListV.empty()) {
 				for (Road<V> *Rd : adjListV) {
-					if (src == Rd->getDst()) { //check src dst links (check src and destination)
-						//RoadExists = true;
+					if (Rd->getDst() == src /*|| src == Rd->getDst()*/) { //check src dst links (check src and destination)
+						RoadExists = true;
 						temp = Rd;
 						break;
 					}
@@ -149,7 +150,7 @@ Map<V>::Map(std::string &f) {
 			//3-4 is a road in itself AND it is connected to 2-3 and 4-5
 			
 
-			std::cout << name << (RoadExists ? " exists" : " does not exist") << std::endl;
+			std::cout << name << " [" << src << "," << dest << "]" << (RoadExists ? " exists" : " does not exist") << std::endl;
 
 			if (RoadExists) {
 				uTurn = (temp->getDst() == src && temp->getSrc() == dest); //true if road is a u-turn

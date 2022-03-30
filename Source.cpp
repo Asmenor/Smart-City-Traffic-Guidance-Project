@@ -14,12 +14,16 @@ int main()
 {
 	// Ali's calls
 	//road,intersection, no of cars information
+
 	std::string f = "C:/Users/a-mehdipou/Documents/GitHub/traffic-management/_src/_include/_data/manhattan.csv";
+
+	//std::string f = "_src/_include/_data/manhattan_actual.csv";
+
 
 	ProactiveRouting<int> PR(f);
 	
 	// calculate shortest path from node u=1
-	PR.calculateDijkstrasSP(61);
+	//PR.calculateDijkstrasSP(61);
 	PR.printAdjacencyList();
 	//PR.printAdjacencyMatrix();
 	//PR.printMap();
