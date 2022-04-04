@@ -116,7 +116,7 @@ Map<V>::Map(std::string &f) {
 
 			congestion = RoadV[RoadV.size() - 1]->getCongestion();
 			//std::cout << std::fixed << "\nadding: " << src << "----(" << congestion << ")----" << dest << std::endl;
-			*/
+			
 
 			std::cout << std::fixed << "\nadding: " << src << "-->" << dest << std::endl;
 
