@@ -88,7 +88,7 @@ Map<V>::Map(std::string &f) {
 		bool RoadExists = false;
 		bool uTurn = false;
 		float congestion;
-		Road<V>* temp;
+		Road<V>* temp = nullptr;
 		Road<V> *curr;
 		std::string name;
 		V src;
