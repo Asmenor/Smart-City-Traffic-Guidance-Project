@@ -49,6 +49,7 @@ float split(bool return_float, std::string str, char seperator, int return_locat
         }
         return std::stof(strings[return_location - 1]);
     }
+    return 0.0;
 }
 
 std::string split(std::string str, char seperator, int return_location, bool return_string)
