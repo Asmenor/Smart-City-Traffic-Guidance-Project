@@ -29,7 +29,7 @@ int main()
 	std::string f = "../../traffic-management/_src/_include/_data/manhattan.csv";
 
 	ReactiveRouting<int> RR(f);
-	RR.calculateSP(0, 99);
+	RR.calculateSP(92, 12);
 	RR.printAdjacencyMatrix();
 
 	return 0;
