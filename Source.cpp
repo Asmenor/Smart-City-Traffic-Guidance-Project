@@ -4,14 +4,15 @@ Email: alihaider1@outlook.com
 */
 
 #include "_src/_include/Map.h"
-#include "_src/_include/ProactiveRouting.h"
-//#include "_src/_include/ReactiveRouting.h"
+//#include "_src/_include/ProactiveRouting.h"
+#include "_src/_include/ReactiveRouting.h"
 //#include "_src/_include/HierarchicalRouting.h"
 //#include "_src/_include/MLRouting.h"
 #include <string>
 
 int main()
 {
+	/*
 	// Ali's calls
 	//road,intersection, no of cars information
 	std::string f = "_src/_include/_data/manhattan_actual.csv";
@@ -23,15 +24,14 @@ int main()
 	PR.printAdjacencyList();
 	//PR.printAdjacencyMatrix();
 	//PR.printMap();
-	
+	*/
 
-	/*David's calls
-	std::string f = "../../traffic-management/_src/_include/_data/manhattan.csv";
+	//David's calls
+	std::string f = "../../traffic-management/_src/_include/_data/manhattan_congested.csv";
 
 	ReactiveRouting<int> RR(f);
-	RR.calculateSP(92, 12);
-	RR.printAdjacencyMatrix();
-	*/
+	RR.scanForCongestion();
+	
 
 	return 0;
 }
