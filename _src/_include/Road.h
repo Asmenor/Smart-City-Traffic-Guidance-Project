@@ -11,13 +11,16 @@ class Road {
 	V dst;
 	float Congestion;
 	float length_segment; //miles
-	int no_of_cars;
-	float avg_speed; //mph
+	//int no_of_cars; // uncomment after writing the setter method
+	//float avg_speed; //mph // uncomment after writing the setter method
 	int no_of_lanes; //mph
 	int speed_limit;
 	Road<V> *next;
 
 public:
+	int no_of_cars; // Setter method should be written and then be deleted
+	float avg_speed; //mph // Setter method should be written and then be deleted
+
 	Road(): name("no name"), src(0),dst(0),Congestion(0.0), length_segment(0.0), no_of_cars(0), avg_speed(0.0), no_of_lanes(0), speed_limit(0)  {}
 	
 	Road(std::string& n, const V& s, const V& d, const int& nc, const float& ls, const float& v, const int& n_l, const int& limit) {
