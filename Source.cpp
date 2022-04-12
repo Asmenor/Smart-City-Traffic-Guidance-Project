@@ -19,7 +19,7 @@ int main()
 	ProactiveRouting<int> PR(f);
 	
 	// calculate shortest path from node u=1
-	//PR.calculateDijkstrasSP(61);
+	PR.calculateDijkstrasSP(61);
 	PR.printAdjacencyList();
 	//PR.printAdjacencyMatrix();
 	//PR.printMap();
