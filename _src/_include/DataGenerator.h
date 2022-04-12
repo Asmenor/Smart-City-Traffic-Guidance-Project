@@ -5,7 +5,9 @@
 #include <fstream>
 #include <vector>
 #include <ctime>
-#include<sstream>
+#include <sstream>
+#include "_include/Road.h"
+
 using namespace std;
 
 struct Data {
@@ -17,6 +19,7 @@ struct Data {
 	float segLen;
 };
 
+template <class V>
 class DataGenerator {
 
 
@@ -27,15 +30,14 @@ public:
 		int avgSpdMin,
 		int avgSpdMax,
 		int minCar,
-		int maxCar,
-		float minSegLen,
-		float maxSegLen);
+		int maxCar);
 
-	vector<Data> getData();
+	//vector<Data> getData();
+	vector<Road<V>> getData();
 
 private:
-	vector<Data> vect;
-
+	//vector<Data> vect;
+	vector<Road<V>> vect;
 
 	int RandBetweenInt(int min, int max)
 	{
@@ -46,18 +48,25 @@ private:
 		float test = min + (max - min) * rand() / (float)RAND_MAX;
 		return test;
 	}
+
+	float CF_max = 0.0f;
+	float CF_min = 0.0f;
+
 };
 
-vector<Data> DataGenerator::getData()
+template <class V>
+vector<Road<V>> DataGenerator<V>::getData()
 {
 	return vect;
 }
 
-bool DataGenerator::readPreviousData(string fileName) {
+template <class V>
+bool DataGenerator<V>::readPreviousData(string fileName) {
 	string line;
-	ifstream myfile("_src/_include/_data/" + fileName);
+	ifstream myfile("_include/_data/" + fileName);
 
-	Data dt;
+	Road<int> dt;
+	//Data dt;
 
 	if (myfile.is_open())
 	{
@@ -68,15 +77,20 @@ bool DataGenerator::readPreviousData(string fileName) {
 			stringstream s_stream(line);
 			while (s_stream.good()) {
 				string substr;
-				getline(s_stream, substr, ','); //get first string delimited by comma
+				getline(s_stream, substr, ','); //gets the first string delimited by comma
 				tokens.push_back(substr);
 			}
-			dt.streetName = tokens[0];
-			dt.from = stoi(tokens[1]);
-			dt.to = stoi(tokens[2]);
-			dt.avgSpeed = stoi(tokens[3]);
-			dt.numCars = stoi(tokens[4]);
-			dt.segLen = stof(tokens[5]);
+			dt.setName(tokens[0]);
+			dt.setSrcDst(stoi(tokens[1]),stoi(tokens[2]));
+
+			dt.avg_speed = stof(tokens[3]);
+			dt.no_of_cars = stoi(tokens[4]);
+
+			dt.setLength(stof(tokens[5]));
+
+			dt.setSpeedLimit(stoi(tokens[6]));
+			dt.setCongestion(stof(tokens[7]));
+
 			vect.push_back(dt);
 		}
 		myfile.close();
@@ -88,38 +102,52 @@ bool DataGenerator::readPreviousData(string fileName) {
 	return false;
 }
 
-void DataGenerator::assignNewData(int avgSpdMin, int avgSpdMax, int minCar, int maxCar, float minSegLen, float maxSegLen)
+template <class V>
+void DataGenerator<V>::assignNewData(int avgSpdMin, int avgSpdMax, int minCar, int maxCar)
 {
 	srand(time(NULL));
 	// Generating new data on dynamic parameters
 	for (int i = 0; i < vect.size(); i++)
 	{
-		vect[i].avgSpeed = RandBetweenInt(avgSpdMin, avgSpdMax);
-		vect[i].numCars = RandBetweenInt(minCar, maxCar);
-		if (i % 2 == 0)
-			vect[i].segLen = RandBetweenFloat(minSegLen, maxSegLen);
-		else
-			vect[i].segLen = vect[i - 1].segLen;
+		vect[i].avg_speed = RandBetweenInt(avgSpdMin, avgSpdMax);
+		vect[i].no_of_cars = RandBetweenInt(minCar, maxCar);
+
+
+		float F1 = vect[i].no_of_cars / (vect[i].getLength() * 377);
+
+		float F2 = vect[i].getAvgSpeed() / vect[i].getSpeedLimit();
+		float CF = F1 / F2;
+
+		// From here after needs to be discussed.
+
+		float CF_max = vect[i].getSpeedLimit() / 5.0f;
+		float CF_min = 0.0f;
+
+		vect[i].setCongestion((CF-CF_min)/(CF_max-CF_min));
+
 	}
 	return;
 }
 
-bool DataGenerator::writeNewData(string fileName) {
+template <class V>
+bool DataGenerator<V>::writeNewData(string fileName) {
 	string line;
-	ofstream myfile("_src/_include/_data/" + fileName);
+	ofstream myfile("_include/_data/" + fileName);
 
 	if (myfile.is_open())
 	{
-		myfile << "street_name,from_junc,to_junc,avg_speed,num_cars,seg_len" << endl;
+		myfile << "street_name,from_junc,to_junc,avg_speed,num_cars,seg_len,spd_limit,congestion" << endl;
 
 		for (int i = 0; i < vect.size(); i++)
 		{
-			myfile << vect[i].streetName << ",";
-			myfile << vect[i].from << ",";
-			myfile << vect[i].to << ",";
-			myfile << vect[i].avgSpeed << ",";
-			myfile << vect[i].numCars << ",";
-			myfile << vect[i].segLen << endl;
+			myfile << vect[i].getName() << ",";
+			myfile << vect[i].getSrc() << ",";
+			myfile << vect[i].getDst() << ",";
+			myfile << vect[i].getAvgSpeed() << ",";
+			myfile << vect[i].getNumCars() << ",";
+			myfile << vect[i].getLength() << ",";
+			myfile << vect[i].getSpeedLimit() << ",";
+			myfile << vect[i].getCongestion() << endl;
 		}
 		myfile.close();
 		
