@@ -6,7 +6,7 @@
 #include <vector>
 #include <ctime>
 #include <sstream>
-#include "_include/Road.h"
+#include "Road.h"				//changed path here
 
 using namespace std;
 
@@ -83,8 +83,10 @@ bool DataGenerator<V>::readPreviousData(string fileName) {
 			dt.setName(tokens[0]);
 			dt.setSrcDst(stoi(tokens[1]),stoi(tokens[2]));
 
-			dt.avg_speed = stof(tokens[3]);
-			dt.no_of_cars = stoi(tokens[4]);
+			//dt.avg_speed = stof(tokens[3]);
+			//dt.no_of_cars = stoi(tokens[4]);
+			dt.setAvgSpeed(stof(tokens[3]));
+			dt.setNumCars(stoi(tokens[4]));
 
 			dt.setLength(stof(tokens[5]));
 
@@ -109,11 +111,12 @@ void DataGenerator<V>::assignNewData(int avgSpdMin, int avgSpdMax, int minCar, i
 	// Generating new data on dynamic parameters
 	for (int i = 0; i < vect.size(); i++)
 	{
-		vect[i].avg_speed = RandBetweenInt(avgSpdMin, avgSpdMax);
-		vect[i].no_of_cars = RandBetweenInt(minCar, maxCar);
+		//vect[i].avg_speed = RandBetweenInt(avgSpdMin, avgSpdMax);
+		//vect[i].no_of_cars = RandBetweenInt(minCar, maxCar);
+		vect[i].setAvgSpeed(RandBetweenInt(avgSpdMin, avgSpdMax));
+		vect[i].setNumCars(RandBetweenInt(minCar, maxCar));
 
-
-		float F1 = vect[i].no_of_cars / (vect[i].getLength() * 377);
+		float F1 = vect[i].getNumCars() / (vect[i].getLength() * 377);	//get method for no_of_cars substituted
 
 		float F2 = vect[i].getAvgSpeed() / vect[i].getSpeedLimit();
 		float CF = F1 / F2;
