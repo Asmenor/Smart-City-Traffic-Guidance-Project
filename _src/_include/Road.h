@@ -10,16 +10,16 @@ class Road {
 	V src;
 	V dst;
 	float Congestion;
-	float length_segment; //miles
-	//int no_of_cars; // uncomment after writing the setter method
-	//float avg_speed; //mph // uncomment after writing the setter method
-	int no_of_lanes; //mph
+	float length_segment;	//miles
+	int no_of_cars; 
+	float avg_speed;		//mph
+	int no_of_lanes;		//mph
 	int speed_limit;
 	Road<V> *next;
 
 public:
-	int no_of_cars; // Setter method should be written and then be deleted
-	float avg_speed; //mph // Setter method should be written and then be deleted
+	//int no_of_cars; // Setter method should be written and then be deleted
+	//float avg_speed; //mph // Setter method should be written and then be deleted
 
 	Road(): name("no name"), src(0),dst(0),Congestion(0.0), length_segment(0.0), no_of_cars(0), avg_speed(0.0), no_of_lanes(0), speed_limit(0)  {}
 	
@@ -51,11 +51,13 @@ public:
 	V getDst() const { return dst; }
 	std::string getName() const { return name;}
 	float getLength() const { return length_segment; }
-	void setLength(const float& l) { length_segment = l; }
+	void setLength(const float& ls) { length_segment = ls; }
 	Road<V>* getNextRoad() const{return next;}
-	void setNextRoad(Road<V>* nextRoad){next = nextRoad;}
+	void setNextRoad(Road<V>* nextRoad) { next = nextRoad; }
+	void setNumCars(const int& nc) { no_of_cars = nc; }
 	int getNumCars() const { return no_of_cars; }
 	float getAvgSpeed() const { return avg_speed; }
+	void setAvgSpeed(const float& v) { avg_speed = v; }
 	void setSpeedLimit(const int& limit) {speed_limit = limit;}
 	int getSpeedLimit() const {return speed_limit;}
 };
