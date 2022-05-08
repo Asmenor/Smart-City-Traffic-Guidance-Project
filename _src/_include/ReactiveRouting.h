@@ -1,14 +1,12 @@
 #ifndef _REACTIVE_CLASS
 #define _REACTIVE_CLASS
 
-#include <iostream>
-#include <string>
-#include <vector>
 #include "Map.h"
 #include "DataGenerator.h"
 
-const int MAX_NUM_CARS = 352;
-const int SPEED_LIMIT = 35;
+const int MAX_NUM_CARS = 377;
+const int SPEED_LIMIT = 25;
+const int MIN_SPEED = 5;
 
 template <class V>
 class ReactiveRouting {
@@ -17,60 +15,87 @@ class ReactiveRouting {
 
 public:
 	ReactiveRouting(std::string&);
-	int findLeastCongestedIntersection(bool[], float[]);
-	void calculateLCP(const V&, const V&, std::vector<Intersection<V>*>);
-	void printAllRoads() const;
-	void printAdjacencyMatrix() const;
-	void printAdjacencyList(const std::vector<Intersection<V>*>&) const;
-	float calculateCF(const int& c, const float& l, const float& v);
-	//float calculateCF(const float& v);
-	int getNextAdjIntersection(int, const std::vector<Intersection<V>*>&) const;
-	float getNextAdjWeight(int, std::vector<Intersection<V>*>&, bool&);
-	void generateNewMap();
 	void scanForCongestion();
+	float calculateCF(const int&, const float&, const float&) const;
+	void printAdjacencyList(const std::vector<Road<V>*>&) const;
 	void printCongestedRoads(Road<V>*) const;
+	void printDirectPTD(const std::vector<Road<V>*>&, const int&, const float&) const;
+	void calculateLCP(const V&, const V&, std::vector<Road<V>*>, float&);
+	int getNextAdjIntersection(int, const std::vector<Road<V>*>&) const;
+	float getNextAdjCongestion(int, std::vector<Road<V>*>&, bool&) const;
+	int findLeastCongestedIntersection(bool[], float[]) const;
+	void printPathToDest(std::vector<Road<V>*>[], const V&, const float&) const;
+	void generateNewMap();
 };
 
 //constructor
 template<class V>
 ReactiveRouting<V>::ReactiveRouting(std::string& f) {
-	//load f and create Map
+	// load f and create Map object
 	manhattan = Map<V>(f);
 }
 
-template<class V>
-void ReactiveRouting<V>::printAllRoads() const {
-	manhattan.printRoads();
-}
+/*
+This function utilizes 3 data structures: a vector of all roads, a linked list of
+congested roads, and an adjacency list of roads. The adjacency list is a vector, with
+each member containing a linked list of roads adjacent from an intersection of the
+map. (Some texts describe this relationship as 'adjacent to'.) At vector[0] are all road
+segments beginning at intersection 0, with traffic flowing away from the intersection.
 
-template<class V>
-void ReactiveRouting<V>::printAdjacencyMatrix() const {
-	manhattan.printAdjMatrix(true);
-}
+The function serves to scan all roads for congested road segments, place them into the
+vector of congested roads, and build the adjacency list to be used by the least congested
+path algorithm that follows. Once the congested roads vector is built, it is parsed to
+identify lengths of congestion (more than 1 contiguous road segment of congestion with the
+same flow of traffic) and the least congested path algorithm is called for each area of
+congestion, be it single road segments or lengths of contiguous roads.
+*/
 
 template<class V>
 void ReactiveRouting<V>::scanForCongestion() {
-
+	// variables for roads
 	std::string nme;
 	V src;
 	V dst;
-	int nc;						//number of cars
-	float ls;					//length of road segment
-	float v;					//avg speed of cars
-	int nl = 1;					//number of lanes, always 1 for me
-	int limit = SPEED_LIMIT;	//speed limit
+	int nc;
+	float ls;
+	float v;
+	int nl = 1;
+	int limit = SPEED_LIMIT;
 	float congestion;
-	float** adj_matrix = manhattan.getAdjacencyMatrix();
-	std::vector<Road<V>*> Roads = manhattan.getRoads();
-	//linked list of congested roads
-	Road<V>* congested_roads = nullptr;
-	//adjacency list of intersections (only for the LCP algo)
-	std::vector<Intersection<V>*> adj_list;
-	//adjacency list of all roads
-	std::vector<Road<V>*> adj_list_roads = manhattan.getAdjacencyList();
 
-	// set road congestion, update adj_matrix, push congested roads into the LL (congested_roads)
-	for (auto road : Roads) {
+	// boolean for congestion in the grid
+	bool congestion_exists = false;
+	// for comparing timings for direct path vs. least congested path
+	float direct_path_time = 0.0;
+	float lcp_time = 0.0;
+
+	// data structures
+	// all roads in a vector
+	std::vector<Road<V>*> Roads = manhattan.getRoads();
+	// adjacency list of roads, each member is the head of a linked list of adjacent roads
+	std::vector<Road<V>*> adj_list;
+	// linked list of congested roads
+	Road<V>* congested_roads = nullptr;
+	Road<V>* curr = nullptr;
+
+	// initialize the adjacency list
+	for (int i = 0; i < no_intersections; i++) {
+		nme = "self";
+		src = i;
+		dst = i;
+		nc = 0;
+		ls = 0.0;
+		v = 0.0;
+		congestion = 0.0;
+
+		adj_list.push_back(new Road<V>(nme, src, dst, nc, ls, v, nl, limit));
+		curr = adj_list.at(i);
+		curr->setCongestion(congestion);
+	}
+
+	// set road congestion, push congested roads into the LL of congested_roads, 
+	// complete adjacency list
+	for (auto& road : Roads) {
 		nme = road->getName();
 		src = road->getSrc();
 		dst = road->getDst();
@@ -78,46 +103,54 @@ void ReactiveRouting<V>::scanForCongestion() {
 		ls = road->getLength();
 		v = road->getAvgSpeed();
 
-		congestion = calculateCF(nc, ls, v);
-		//congestion = calculateCF(v);
 		// override road congestion values
+		congestion = calculateCF(nc, ls, v);
 		road->setCongestion(congestion);
+
 		// push congested roads into the linked list of congested roads
-		if (road->getCongestion() > 0.65) {
-			// if the list is empty...
-			if (congested_roads == nullptr) {
-				congested_roads = new Road<V>(nme, src, dst, nc, ls, v, nl, limit);
-			}
-			// all subsequent roads...
-			else {
-				Road<V>* curr = congested_roads;
-				while (curr->getNextRoad() != nullptr) curr = curr->getNextRoad();
-				curr->setNextRoad(new Road<V>(nme, src, dst, nc, ls, v, nl, limit));
+		// don't push "border" roads in
+		if (road->getSrc() > (ROWS - 1) && road->getDst() > (ROWS - 1) &&
+			road->getSrc() < (no_intersections - ROWS) && road->getDst() < (no_intersections - ROWS) &&
+			road->getSrc() % ROWS != 0 && road->getDst() % ROWS != 0 &&
+			road->getSrc() % ROWS != (ROWS - 1) && road->getDst() % ROWS != (ROWS - 1)) {
+			if (road->getCongestion() > 0.65) {
+				// if the list is empty...
+				if (congested_roads == nullptr) {
+					congested_roads = new Road<V>(nme, src, dst, nc, ls, v, nl, limit);
+					congested_roads->setCongestion(congestion);
+				}
+				// all subsequent roads...
+				else {
+					curr = congested_roads;
+					while (curr->getNextRoad() != nullptr) curr = curr->getNextRoad();
+					curr->setNextRoad(new Road<V>(nme, src, dst, nc, ls, v, nl, limit));
+					curr->getNextRoad()->setCongestion(congestion);
+				}
+				congestion_exists = true;
 			}
 		}
-		// update adjacency matrix
-		adj_matrix[src][dst] = congestion;
+
+		// complete adjacency list
+		curr = adj_list.at(src);
+		while (curr->getNextRoad() != nullptr) curr = curr->getNextRoad();
+		curr->setNextRoad(new Road<V>(nme, src, dst, nc, ls, v, nl, limit));
+		curr->getNextRoad()->setCongestion(congestion);
 	}
 
-	// update adj_list of intersections from adj_matrix
-	Intersection<V>* curr = nullptr;
+	// insert dummy node at end of each LL in the adjacency list (src/dst of infinity)
 	for (int i = 0; i < no_intersections; i++) {
-		src = i;
-		adj_list.push_back(new Intersection<V>(src));
-		for (int j = 0; j < no_intersections; j++)
-			if (adj_matrix[i][j] > 0.00 && adj_matrix[i][j] != inf) {
-				curr = adj_list.at(src);
-				while (curr->getNextIntersection() != nullptr) {
-					curr = curr->getNextIntersection();
-				}
-				dst = j;
-				congestion = adj_matrix[i][j];
-				curr->setNextIntersection(new Intersection<V>(dst, congestion));
-			}
-		// insert dummy node at end of each LL (value of infinity)
+		nme = "dummy road";
+		src = inf;
 		dst = inf;
-		curr = curr->getNextIntersection();
-		curr->setNextIntersection(new Intersection<V>(dst));
+		nc = 0;
+		ls = 0.0;
+		v = 0;
+		congestion = 0.0;
+
+		curr = adj_list.at(i);
+		while (curr->getNextRoad() != nullptr) curr = curr->getNextRoad();
+		curr->setNextRoad(new Road<V>(nme, src, dst, nc, ls, v, nl, limit));
+		curr->getNextRoad()->setCongestion(congestion);
 	}
 
 	printAdjacencyList(adj_list);
@@ -128,193 +161,287 @@ void ReactiveRouting<V>::scanForCongestion() {
 	// and set start/end for routing
 	V start;
 	V end;
-	V match;									//for finding adjacent congested lengths
-	int traffic_flow = 0;						//directional information
-	Road<V>* root = congested_roads;			//always marks the beginning of the list
-	Road<V>* current = nullptr;					//continually cycles through the list
-	Road<V>* holding_ptr = nullptr;				//for deleting adjacent roads as they're matched up to root
+	V match;
+	int traffic_flow = 0;
+	Road<V>* root = congested_roads;
+	Road<V>* current = nullptr;
+	Road<V>* holding_ptr = nullptr;
 
-	// outer loop
-	while (root != nullptr) {
-		holding_ptr = root;
-		current = root->getNextRoad();
-		// obtain direction of traffic flow
-		// north, 0
-		if (root->getSrc() == root->getDst() - 1) traffic_flow = 0;
-		// south, 1
-		else if (root->getSrc() == root->getDst() + 1) traffic_flow = 1;
-		// east, 2
-		else if (root->getSrc() < root->getDst()) traffic_flow = 2;
-		// west, 3
-		else if (root->getSrc() > root->getDst()) traffic_flow = 3;
+	// direct path to destination vector for comparison to least congested path
+	std::vector<Road<V>*> directPTD;
 
-		// set start and end variables
-		start = root->getSrc();
-		end = root->getDst();
+	// nested loops for assembling contiguous segments of congestion
+	if (congestion_exists) {
+		while (root != nullptr) {
+			// reset direct path time
+			direct_path_time = 0.0;
+			// push root into direct path to destination
+			nme = root->getName();
+			src = root->getSrc();
+			dst = root->getDst();
+			nc = root->getNumCars();
+			ls = root->getLength();
+			v = root->getAvgSpeed();
+			directPTD.push_back(new Road<V>(nme, src, dst, nc, ls, v, nl, limit));
+			directPTD[directPTD.size() - 1]->setCongestion(root->getCongestion());
+			holding_ptr = root;
+			current = root->getNextRoad();
+			// north, 0
+			if (root->getSrc() == root->getDst() - 1) traffic_flow = 0;
+			// south, 1
+			else if (root->getSrc() == root->getDst() + 1) traffic_flow = 1;
+			// east, 2
+			else if (root->getSrc() < root->getDst()) traffic_flow = 2;
+			// west, 3
+			else if (root->getSrc() > root->getDst()) traffic_flow = 3;
 
-		// northern or eastern flow (intersection numbers increase)
-		if (traffic_flow == 0 || traffic_flow == 2) {
-			match = end;
+			// set start and end variables
+			start = root->getSrc();
+			end = root->getDst();
 
-			while (current != nullptr) {
-				if (current->getSrc() == match) {
-					end = current->getDst();
-					match = end;
-					Road<V>* temporary = current;
-					current = current->getNextRoad();
-					holding_ptr->setNextRoad(current);
-					delete temporary;
-				}
+			// northern flow (intersection numbers increase by 1)
+			if (traffic_flow == 0) {
+				match = end;
 
-				else {
-					holding_ptr = holding_ptr->getNextRoad();
-					current = current->getNextRoad();
+				while (current != nullptr) {
+					if (current->getSrc() == match && current->getSrc() == current->getDst() - 1) {
+						end = current->getDst();
+						match = end;
+						// push into direct path to destination
+						nme = current->getName();
+						src = current->getSrc();
+						dst = current->getDst();
+						nc = current->getNumCars();
+						ls = current->getLength();
+						v = current->getAvgSpeed();
+						directPTD.push_back(new Road<V>(nme, src, dst, nc, ls, v, nl, limit));
+						directPTD[directPTD.size() - 1]->setCongestion(current->getCongestion());
+						Road<V>* temporary = current;
+						current = current->getNextRoad();
+						holding_ptr->setNextRoad(current);
+						delete temporary;
+					}
+
+					else {
+						holding_ptr = holding_ptr->getNextRoad();
+						current = current->getNextRoad();
+					}
 				}
 			}
-		}
 
-		// southern or western flow (intersection numbers decrease)
-		if (traffic_flow == 1 || traffic_flow == 3) {
-			match = start;
+			// eastern flow (intersection numbers increase by ROWS)
+			if (traffic_flow == 2) {
+				match = end;
 
-			while (current != nullptr) {
-				if (current->getDst() == match) {
-					start = current->getSrc();
-					match = start;
-					Road<V>* temporary = current;
-					current = current->getNextRoad();
-					holding_ptr->setNextRoad(current);
-					delete temporary;
-				}
+				while (current != nullptr) {
+					if (current->getSrc() == match && current->getSrc() == current->getDst() - ROWS) {
+						end = current->getDst();
+						match = end;
+						// push into direct path to destination
+						nme = current->getName();
+						src = current->getSrc();
+						dst = current->getDst();
+						nc = current->getNumCars();
+						ls = current->getLength();
+						v = current->getAvgSpeed();
+						directPTD.push_back(new Road<V>(nme, src, dst, nc, ls, v, nl, limit));
+						directPTD[directPTD.size() - 1]->setCongestion(current->getCongestion());
+						Road<V>* temporary = current;
+						current = current->getNextRoad();
+						holding_ptr->setNextRoad(current);
+						delete temporary;
+					}
 
-				else {
-					holding_ptr = holding_ptr->getNextRoad();
-					current = current->getNextRoad();
+					else {
+						holding_ptr = holding_ptr->getNextRoad();
+						current = current->getNextRoad();
+					}
 				}
 			}
-		}
 
-		// set start and end based on traffic flow
-		// north
-		if (traffic_flow == 0) {
-			start = start - 1;
-			end = end + 1;
-		}
-		// south
-		else if (traffic_flow == 1) {
-			start = start + 1;
-			end = end - 1;
-		}
-		// east
-		else if (traffic_flow == 2) {
-			start = start - ROWS;
-			end = end + ROWS;
-		}
-		// west
-		else if (traffic_flow == 3) {
-			start = start + ROWS;
-			end = end - ROWS;
-		}
+			// southern flow (intersection numbers decrease by 1)
+			if (traffic_flow == 1) {
+				match = start;
 
-		// run the LCP algorithm
-		std::cout << "\nFinding least congested path from " << start << " to " << end << "... \n";
-		calculateLCP(start, end, adj_list);
+				while (current != nullptr) {
+					if (current->getDst() == match && current->getSrc() == current->getDst() + 1) {
+						start = current->getSrc();
+						match = start;
+						//push into direct path to destination
+						nme = current->getName();
+						src = current->getSrc();
+						dst = current->getDst();
+						nc = current->getNumCars();
+						ls = current->getLength();
+						v = current->getAvgSpeed();
+						directPTD.push_back(new Road<V>(nme, src, dst, nc, ls, v, nl, limit));
+						directPTD[directPTD.size() - 1]->setCongestion(current->getCongestion());
+						Road<V>* temporary = current;
+						current = current->getNextRoad();
+						holding_ptr->setNextRoad(current);
+						delete temporary;
+					}
 
-		// remove first road from the list and advance root
-		Road<V>* temporary = root;
-		root = root->getNextRoad();
-		delete temporary;
-	}
-}
-
-
-template<class V>
-void ReactiveRouting<V>::calculateLCP(const V& s, const V& t, std::vector<Intersection<V>*> al) {
-
-	std::vector<Intersection<V>*> adj_list = al;
-	bool visited[no_intersections];						//array of boolean values... visited or not
-	float segment_congestion[no_intersections];			//array of congestion values from sources (rows) to destinations (columns)
-	int least_congested_intrsctn;
-	bool adjIntersectionsRemain;
-	std::vector<int> pathToDest[no_intersections];		//array of vectors for various paths
-	int mark;
-
-	for (int k = 0; k < no_intersections; k++) {
-		visited[k] = false;
-		segment_congestion[k] = inf;
-	}
-
-	visited[s] = true;
-	segment_congestion[s] = 0.0;
-	least_congested_intrsctn = s;
-
-	while (least_congested_intrsctn != t) {
-
-		adjIntersectionsRemain = true;
-
-		while (adjIntersectionsRemain) {
-			int nextAdjIntersection = getNextAdjIntersection(least_congested_intrsctn, adj_list);
-			float nextAdjWeight = getNextAdjWeight(least_congested_intrsctn, adj_list, adjIntersectionsRemain);
-			//place weight in segment_congestion[] if less than current
-			if ((segment_congestion[least_congested_intrsctn] + nextAdjWeight < segment_congestion[nextAdjIntersection])
-				&& (!visited[nextAdjIntersection])) {
-				segment_congestion[nextAdjIntersection] = segment_congestion[least_congested_intrsctn] + nextAdjWeight;
-				//update path
-				pathToDest[nextAdjIntersection] = pathToDest[least_congested_intrsctn];
-				pathToDest[nextAdjIntersection].push_back(nextAdjIntersection);
+					else {
+						holding_ptr = holding_ptr->getNextRoad();
+						current = current->getNextRoad();
+					}
+				}
 			}
+
+			// western flow (intersection numbers decrease by ROWS)
+			if (traffic_flow == 3) {
+				match = start;
+
+				while (current != nullptr) {
+					if (current->getDst() == match && current->getSrc() == current->getDst() + ROWS) {
+						start = current->getSrc();
+						match = start;
+						//push into direct path to destination
+						nme = current->getName();
+						src = current->getSrc();
+						dst = current->getDst();
+						nc = current->getNumCars();
+						ls = current->getLength();
+						v = current->getAvgSpeed();
+						directPTD.push_back(new Road<V>(nme, src, dst, nc, ls, v, nl, limit));
+						directPTD[directPTD.size() - 1]->setCongestion(current->getCongestion());
+						Road<V>* temporary = current;
+						current = current->getNextRoad();
+						holding_ptr->setNextRoad(current);
+						delete temporary;
+					}
+
+					else {
+						holding_ptr = holding_ptr->getNextRoad();
+						current = current->getNextRoad();
+					}
+				}
+			}
+
+			// set start and end based on traffic flow
+			// north
+			if (traffic_flow == 0) {
+				start = start - 1;
+				// add first segment from start
+				for (Road<V>* rd : Roads) {
+					if (rd->getSrc() == start && rd->getDst() == start + 1) {
+						directPTD.insert(directPTD.begin(), rd);
+						break;
+					}
+				}
+			}
+
+			// south
+			else if (traffic_flow == 1) {
+				start = start + 1;
+				// add first segment from start
+				for (Road<V>* rd : Roads) {
+					if (rd->getSrc() == start && rd->getDst() == start - 1) {
+						directPTD.insert(directPTD.end(), rd);
+						break;
+					}
+				}
+			}
+
+			// east
+			else if (traffic_flow == 2) {
+				start = start - ROWS;
+				// add first segment from start
+				for (Road<V>* rd : Roads) {
+					if (rd->getSrc() == start && rd->getDst() == start + ROWS) {
+						directPTD.insert(directPTD.begin(), rd);
+						break;
+					}
+				}
+			}
+
+			// west
+			else if (traffic_flow == 3) {
+				start = start + ROWS;
+				// add first segment from start
+				for (Road<V>* rd : Roads) {
+					if (rd->getSrc() == start && rd->getDst() == start - ROWS) {
+						directPTD.insert(directPTD.end(), rd);
+						break;
+					}
+				}
+			}
+
+			// calculate direct path travel time
+			for (int i = 0; i < directPTD.size(); i++) {
+				direct_path_time += (directPTD.at(i)->getLength()) / (directPTD.at(i)->getAvgSpeed());
+			}
+			// convert hours to minutes
+			direct_path_time = direct_path_time * 60;
+
+			// print directPTD
+			std::cout << "\nDirect path through congested area from " <<
+				start << " to " << end << ": \n";
+			printDirectPTD(directPTD, traffic_flow, direct_path_time);
+
+			// run the LCP algorithm
+			std::cout << "\nFinding path with lowest congestion total from " << start << " to " << end << "... \n";
+			calculateLCP(start, end, adj_list, lcp_time);
+
+			// compare direct path time to lcp time
+			if (direct_path_time > lcp_time) {
+				std::cout << "Taking the path with the lowest congestion total will save you approximately " <<
+					direct_path_time - lcp_time << " minutes.\n";
+			}
+
+			// remove first road from the list congested roads and advance root
+			Road<V>* temporary = root;
+			root = root->getNextRoad();
+			delete temporary;
+			// clear out directPTD
+			directPTD.clear();
 		}
-		//mark least congested unvisited intersection in segment_congestion[]
-		mark = findLeastCongestedIntersection(visited, segment_congestion);
-		visited[mark] = true;
-		least_congested_intrsctn = mark;
 	}
-	std::cout << "\nLeast congestion from " << s << " to " << t << ": " << segment_congestion[t] << std::endl;
-
-	// add source to beginning of path
-	pathToDest[t].insert(pathToDest[t].begin(), s);
-	// print path
-	std::cout << "Path is: ";
-	for (int j = 0; j < pathToDest[t].size(); j++) {
-		if (j == pathToDest[t].size() - 1) std::cout << pathToDest[t][j] << std::endl;
-		else std::cout << pathToDest[t][j] << " --> ";
-	}
-}
-
-
-template<class V>
-float ReactiveRouting<V>::calculateCF(const int& nc, const float& ls, const float& v) {
-	float cf;
-	cf = (nc / (MAX_NUM_CARS * ls)) * (1 - (v / SPEED_LIMIT));
-	return cf;
+	else std::cout << "No congestion currently exists." << endl;
 }
 
 /*
-// alternate congestion calculation
-template<class V>
-float ReactiveRouting<V>::calculateCF(const float& v) {
-	float cf;
-	cf = 1 - (v / SPEED_LIMIT);
-	return cf;
-}
+A function for calculating congestion for any road segment using number of cars, the
+length of the road segment, and the average speed of the cars on the segment.
 */
 
 template<class V>
-void ReactiveRouting<V>::printAdjacencyList(const std::vector<Intersection<V>*>& al) const {
+float ReactiveRouting<V>::calculateCF(const int& nc, const float& ls, const float& v) const {
+	// not normalized
+	float nncf;
+	// normalized
+	float ncf;
+	nncf = (nc / (MAX_NUM_CARS * ls)) / (v / SPEED_LIMIT);
+	ncf = nncf / (SPEED_LIMIT / MIN_SPEED);
+	return ncf;
+}
+
+/*
+Prints the adjacency list. The head of each vector showing an intersection as adjacent
+from itself is not printed. Nor is the dummy road at the end of the list.
+*/
+
+template<class V>
+void ReactiveRouting<V>::printAdjacencyList(const std::vector<Road<V>*>& al) const {
 	std::cout << std::endl << "Adjacency list..." << std::endl;
-	for (Intersection<V>* Intersec : al) {
-		// print all neighboring vertices of given vertex
-		Intersection<V>* curr = Intersec;
-		std::cout << curr->getIntersectionValue(); //print Map Intersection
-		curr = curr->getNextIntersection();
-		// don't print dummy intersection at the end
-		while (curr->getNextIntersection() != nullptr) {
-			std::cout << " --> [" << curr->getIntersectionValue() << ", C(" << std::setprecision(4) << curr->getIntersectionCongestion() << ")]"; //print adjacent Intersections to Map Intersection
-			curr = curr->getNextIntersection();
+	for (Road<V>* rd : al) {
+		Road<V>* curr = rd;
+		// don't print the root node
+		curr = curr->getNextRoad();
+		// don't print the dummy node
+		while (curr->getNextRoad() != nullptr) {
+			std::cout << curr->getSrc() << " --> " << curr->getDst() <<
+				" (c: " << std::setprecision(4) << curr->getCongestion() << ")" << "\t";
+			curr = curr->getNextRoad();
 		}
 		std::cout << std::endl;
 	}
 }
+
+/*
+Prints all road segments currently congested.
+*/
 
 template<class V>
 void ReactiveRouting<V>::printCongestedRoads(Road<V>* cr) const {
@@ -326,54 +453,222 @@ void ReactiveRouting<V>::printCongestedRoads(Road<V>* cr) const {
 	}
 }
 
+/*
+Prints direct path through congested area with estimated travel time.
+*/
+
 template<class V>
-int ReactiveRouting<V>::getNextAdjIntersection(int lwi, const std::vector<Intersection<V>*>& al) const {
-	Intersection<V>* curr = al.at(lwi);
-	int result = curr->getNextIntersection()->getIntersectionValue();
-	return result;
+void ReactiveRouting<V>::printDirectPTD(const std::vector<Road<V>*>& dptd, const int& tf, const float& dpt) const {
+	// north or east
+	if (tf == 0 || tf == 2) {
+		for (int i = 0; i < dptd.size(); i++) {
+			std::cout << dptd.at(i)->getSrc() << " --> " << dptd.at(i)->getDst() <<
+				", segment distance: " << dptd.at(i)->getLength() << " miles\n";
+		}
+		std::cout << "Est travel time: " << dpt << " minutes\n";
+	}
+	// south or west (print backward)
+	else if (tf == 1 || tf == 3) {
+		for (int i = dptd.size() - 1; i >= 0; i--) {
+			std::cout << dptd.at(i)->getSrc() << " --> " << dptd.at(i)->getDst() <<
+				", segment distance: " << dptd.at(i)->getLength() << " miles\n";
+		}
+		std::cout << "Est travel time: " << dpt << " minutes\n";
+	}
 }
 
+/*
+Calculates the least congested path between two points as determined by scanForCongestion()
+using 4 primary data structures: the adjacency list passed from scanForCongestion(), an array
+marking intersections whose least congested path from the source has been found, an array of
+congestion values for each intersection from the source (continually updated until the LCP is
+found), and an array of vectors of roads for holding the specific path from source to destination.
+
+The adjacency list is  used as the primary data structure for running Dijkstra's algorithm.
+Rather than iterating through an adjacency matrix (a common method for running the algorithm),
+the adjacency list is used to determine all roads adjacent from each intersection visited. While
+this method is programmatically a bit more intensive than the use of an adjacency matrix, it
+provides two advantages: only roads adjacent from the given intersection are iterated through
+(rather than all intersections); all information pertinent to the user for output is contained
+in the structure, not just the congestion value (name, road segment length, etc.).
+*/
+
 template<class V>
-float ReactiveRouting<V>::getNextAdjWeight(int lwi, std::vector<Intersection<V>*>& al, bool& air) {
-	Intersection<V>* root = al.at(lwi);
-	Intersection<V>* curr = root;
-	Intersection<V>* dummy = nullptr;
-	Intersection<V>* temp = root->getNextIntersection();
+void ReactiveRouting<V>::calculateLCP(const V& s, const V& t, std::vector<Road<V>*> al, float& lcpt) {
 
-	float result = temp->getIntersectionCongestion();
+	std::vector<Road<V>*> adj_list = al;
+	bool found[no_intersections];						//intersections where LCP has been found
+	float segment_congestion[no_intersections];			//array of congestion values for visited intersections
+	int least_congested_intrsctn;
+	bool adjIntersectionsRemain;
+	std::vector<Road<V>*> pathToDest[no_intersections];	//array of vectors of type Road
+	int mark;
 
-	while (curr->getNextIntersection() != nullptr) curr = curr->getNextIntersection();
-	root->setNextIntersection(temp->getNextIntersection());
-	curr->setNextIntersection(temp);
-	temp->setNextIntersection(nullptr);
-
-	// look for dummy node, mark "air" false and move dummy node to the end if found
-	if (root->getNextIntersection()->getIntersectionValue() == inf) {
-		air = false;
-		curr = curr->getNextIntersection();
-		// hold the dummy node
-		dummy = root->getNextIntersection();
-		root->setNextIntersection(dummy->getNextIntersection());
-		curr->setNextIntersection(dummy);
-		dummy->setNextIntersection(nullptr);
+	for (int k = 0; k < no_intersections; k++) {
+		found[k] = false;
+		segment_congestion[k] = inf;
 	}
 
+	found[s] = true;
+	segment_congestion[s] = 0.0;
+	least_congested_intrsctn = s;
+
+	// variables for roads pushed into pathToDest
+	std::string nme;
+	V src;
+	V dst;
+	int nc;
+	float ls;
+	float v;
+	int nl = 1;
+	int limit = SPEED_LIMIT;
+	float congestion;
+	Road<V>* curr = nullptr;
+
+	while (least_congested_intrsctn != t) {
+
+		adjIntersectionsRemain = true;
+		while (adjIntersectionsRemain) {
+			int nextAdjIntersection = getNextAdjIntersection(least_congested_intrsctn, adj_list);
+			float nextAdjCongestion = getNextAdjCongestion(least_congested_intrsctn, adj_list, adjIntersectionsRemain);
+			// place congestion in segment_congestion[] if less than current value
+			if ((segment_congestion[least_congested_intrsctn] + nextAdjCongestion < segment_congestion[nextAdjIntersection])
+				&& (!found[nextAdjIntersection])) {
+				segment_congestion[nextAdjIntersection] = segment_congestion[least_congested_intrsctn] + nextAdjCongestion;
+				// update path
+				curr = adj_list.at(least_congested_intrsctn);
+				// if dummy is at the end, get to second to last road
+				if (!adjIntersectionsRemain) {
+					while (curr->getNextRoad()->getNextRoad() != nullptr) {
+						curr = curr->getNextRoad();
+					}
+				}
+				// otherwise, get to last road
+				else {
+					while (curr->getNextRoad() != nullptr) {
+						curr = curr->getNextRoad();
+					}
+				}
+				// set values for addition to pathToDest[]
+				nme = curr->getName();
+				src = curr->getSrc();
+				dst = curr->getDst();
+				nc = curr->getNumCars();
+				ls = curr->getLength();
+				v = curr->getAvgSpeed();
+				congestion = curr->getCongestion();
+				// copy path from lci
+				pathToDest[nextAdjIntersection] = pathToDest[least_congested_intrsctn];
+				// add new road to path
+				pathToDest[nextAdjIntersection].push_back(new Road<V>(nme, src, dst, nc, ls, v, nl, limit));
+			}
+		}
+		// mark least congested unvisited intersection in segment_congestion[]
+		mark = findLeastCongestedIntersection(found, segment_congestion);
+		found[mark] = true;
+		least_congested_intrsctn = mark;
+	}
+	std::cout << "\nLowest total congestion: " << segment_congestion[t] << std::endl;
+
+	// calculate lcp time
+	lcpt = 0.0;
+	for (int j = 0; j < pathToDest[t].size(); j++) {
+		curr = pathToDest[t].at(j);
+		lcpt += curr->getLength() / curr->getAvgSpeed();
+	}
+	// hours to minutes
+	lcpt = lcpt * 60;
+
+	// print path
+	printPathToDest(pathToDest, t, lcpt);
+}
+
+/*
+Used in conjunction with calculateLCP(). Returns the destination intersection of the next road
+adjacent from the source intersection.
+*/
+
+template<class V>
+int ReactiveRouting<V>::getNextAdjIntersection(int lci, const std::vector<Road<V>*>& al) const {
+	Road<V>* curr = al.at(lci);
+	int result = curr->getNextRoad()->getDst();
 	return result;
 }
 
+/*
+Used in conjunction with calculateLCP(). Returns the congestion value of each road adjacent
+from the source intersection (1 per call). The road is cycled to the back of the list
+as it's congestion value is returned. Once the dummy road is hit, which signifies the last
+road segment adjacent from the source intersection has been called, it is cycled to the back,
+thereby resetting the list for further calls to calculateLCP().
+*/
+
 template<class V>
-int ReactiveRouting<V>::findLeastCongestedIntersection(bool visited[], float segment_congestion[]) {
+float ReactiveRouting<V>::getNextAdjCongestion(int lci, std::vector<Road<V>*>& al, bool& air) const {
+	Road<V>* root = al.at(lci);
+	Road<V>* curr = root;
+	Road<V>* temp = root->getNextRoad();
+	Road<V>* dummy = nullptr;
+
+	float result = temp->getCongestion();
+
+	while (curr->getNextRoad() != nullptr) curr = curr->getNextRoad();
+	root->setNextRoad(temp->getNextRoad());
+	curr->setNextRoad(temp);
+	temp->setNextRoad(nullptr);
+
+	// look for dummy node, mark "air" false and move dummy node to the end if found
+	if (root->getNextRoad()->getDst() == inf) {
+		air = false;
+		// move curr to the end of the list
+		curr = curr->getNextRoad();
+		// hold the dummy node
+		dummy = root->getNextRoad();
+		root->setNextRoad(dummy->getNextRoad());
+		// move dummy node to the end of the LL
+		curr->setNextRoad(dummy);
+		dummy->setNextRoad(nullptr);
+	}
+	return result;
+}
+
+/*
+Returns the least congested intersection from the segment_congestion[] array that has not already
+been marked.
+*/
+
+template<class V>
+int ReactiveRouting<V>::findLeastCongestedIntersection(bool found[], float segment_congestion[]) const {
 	float min = inf;
 	int lci;
 	for (int i = 0; i < no_intersections; i++) {
-		if (!visited[i] && segment_congestion[i] <= min) {
+		if (!found[i] && segment_congestion[i] <= min) {
 			min = segment_congestion[i];
 			lci = i;
 		}
-		//std::cout << "min: " << lci << std::endl;
 	}
 	return lci;
 }
+
+/*
+Prints the path from source to destination with estimated travel time.
+*/
+
+template<class V>
+void ReactiveRouting<V>::printPathToDest(std::vector<Road<V>*> pathToDest[], const V& t, const float& lcpt) const {
+	Road<V>* curr = nullptr;
+	std::cout << "\nPath is: \n";
+	for (int j = 0; j < pathToDest[t].size(); j++) {
+		curr = pathToDest[t].at(j);
+		std::cout << curr->getSrc() << " --> " << curr->getDst() << ", segment distance: " << curr->getLength() << " miles\n";
+	}
+	std::cout << "Est travel time: " << lcpt << " minutes\n";
+}
+
+/*
+Generates a map with updated variable information. This functionality will ultimately be
+moved to the Map.h class, and is not currently used.
+*/
 
 template<class V>
 void ReactiveRouting<V>::generateNewMap() {
