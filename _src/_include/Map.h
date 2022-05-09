@@ -10,9 +10,6 @@
 #include "Intersection.h"
 #include "Split.h"
 #include <iomanip>
-//for pareto random variables
-#include <boost/random.hpp>
-#include <boost/range/irange.hpp>
 
 
 const float inf = 100.0;
@@ -50,13 +47,6 @@ Map<V>::Map() {
 template<class V>
 Map<V>::Map(std::string &f) {
 	std::cout << "Loading data file...\n";
-	V s = 0;
-	//adjListV.push_back(new Road<V>()); //dummy intersection
-
-	//for Pareto Random Variable
-	boost::random::mt19937 rng(time(0));
-    boost::random::exponential_distribution<> dist(1.0);
-    float x_m = 1;
 	
 	/*Init Adjacency Matrix*/
 	
@@ -66,23 +56,18 @@ Map<V>::Map(std::string &f) {
 		adj_matrix[i] = new float[no_intersections];
 	}
 
-	//THIS ALTERED
 	for (int i = 0; i < no_intersections; i++) {
 		for (int j = 0; j < no_intersections; j++) {
-			//std::cout << i << " " << j << "\n";
 			if (i == j) adj_matrix[i][j] = 0.0;
 			else adj_matrix[i][j] = inf;
 		}
 	}
-	/**/
 
 	//read <city>.csv file and load road information
 	//https://www.new-york-city-map.com/manhattan.htm
 	std::ifstream dataFile(f.c_str());
 	std::string line;
 	std::getline (dataFile, line); //ignore header
-
-	
 
 	if ( dataFile.is_open() ) {
 		bool RoadExists = false;
@@ -100,43 +85,25 @@ Map<V>::Map(std::string &f) {
 		int no_lanes;
 		while ( dataFile ) {
 			std::getline (dataFile, line);
-
 			RoadExists = false;
 			uTurn = false;
-			name = split(line,',',1,true);
-			src = split(line,',',2);
-			dest = split(line,',',3);
+			name = split(line, ',', 1, true);
+			src = split(line, ',', 2);
+			dest = split(line, ',', 3);
 			//added new parameters here
 			avg_speed = split(line, ',', 4);
 			no_of_cars = split(line, ',', 5);
-			//bool indicates a return type of float if true
 			length_segment = split(true, line, ',', 6);
-			sp_limit = 20;
+			sp_limit = split(line, ',', 7);
+			congestion = split(true, line, ',', 8);
 			no_lanes = 1;
 
-			
-			
-			/* DEPRECATED?
-			RoadV.push_back(new Road<V>(name, src, dest, static_cast<int>(x_m * getExponential(20, dist(rng))),20,3));
-			*/
-
 			//Add Road
-			RoadV.push_back(new Road<V>(name, src, dest, no_of_cars, length_segment, avg_speed, no_lanes, sp_limit));
+			RoadV.push_back(new Road<V>(name, src, dest, no_of_cars, length_segment, avg_speed, no_lanes, sp_limit, congestion));
 			//end
-
-
-			congestion = RoadV[RoadV.size() - 1]->getCongestion();
-			//std::cout << std::fixed << "\nadding: " << src << "----(" << congestion << ")----" << dest << std::endl;
-			
 
 			std::cout << std::fixed << "\nadding: " << src << "-->" << dest << std::endl;
 
-			/* DEPRECATED?
-			//Add congestion value to adj matrix
-			adj_matrix[src][dest] = congestion;
-			*/
-
-			// DEPRECATED?
 			//populate adjacency list
 			if (! adjListV.empty()) {
 				for (Road<V> *Rd : adjListV) {
@@ -161,7 +128,7 @@ Map<V>::Map(std::string &f) {
 					while (curr->getNextRoad() != nullptr)
 						curr = curr->getNextRoad();
 					
-					curr->setNextRoad(new Road<V>(name, src, dest, no_of_cars, length_segment, avg_speed, no_lanes, sp_limit));
+					curr->setNextRoad(new Road<V>(name, src, dest, no_of_cars, length_segment, avg_speed, no_lanes, sp_limit, congestion));
 					
 					//curr->setNextRoad(new Road<V>(name, src, dest, congestion,20,3));
 					std::cout << "--> \""<< name << "\" " << src << " " << dest << " added." << std::endl;
@@ -173,48 +140,8 @@ Map<V>::Map(std::string &f) {
 			else {
 				std::cout << "(First) \""<< name << "\" " << src << " " << dest << " added." << std::endl;
 				//Add road to vector |  Road  |->nullptr
-				adjListV.push_back(new Road<V>(name, src, dest, no_of_cars, length_segment, avg_speed, no_lanes, sp_limit));
-				
-				//add associated destination to the Intersection |  Intersection  |->|  Intersection  |->nullptr
-				//Road<V> *curr = adjListV.at(src);
-				//curr->setNextIntersection(new Intersection<V>(dest, congestion));
-				//std::cout << "new Intersection and destination added." << std::endl;
-			
-
-			/* DEPRECATED
-			if (! adjListV.empty()) {
-				for (Intersection<V> *Intersection : adjListV) {
-					if (src == Intersection->getIntersectionValue()) {
-						IntersectionExists = true;
-						break;
-					}
-				}
-			}
-
-			std::cout << src << (IntersectionExists ? " exists" : " does not exist") << std::endl;
-
-			if (IntersectionExists) {
-				std::cout << "updating...";
-				//Intersection at the end of list connected to vector |  Intersection  |->... |  Intersection  |->nullptr
-				Intersection<V> *curr = adjListV.at(src);
-				while (curr->getNextIntersection() != nullptr)
-					curr = curr->getNextIntersection();
-
-				curr->setNextIntersection(new Intersection<V>(dest, congestion));
-				std::cout << "--> "<< dest << " added." << std::endl;
-			}
-			else {
-				std::cout << "adding...";
-				//add Intersection to vector |  Intersection  |->nullptr
-				adjListV.push_back(new Intersection<V>(src));
-				
-				//add associated destination to the Intersection |  Intersection  |->|  Intersection  |->nullptr
-				Intersection<V> *curr = adjListV.at(src);
-				curr->setNextIntersection(new Intersection<V>(dest, congestion));
-				std::cout << "new Intersection and destination added." << std::endl;
-			*/
-			}
-			
+				adjListV.push_back(new Road<V>(name, src, dest, no_of_cars, length_segment, avg_speed, no_lanes, sp_limit, congestion));
+			}	
 		}
 	}
 	else{
