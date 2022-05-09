@@ -5,7 +5,6 @@
 #include "DataGenerator.h"
 
 const int MAX_NUM_CARS = 377;
-const int SPEED_LIMIT = 25;
 const int MIN_SPEED = 5;
 
 template <class V>
@@ -16,7 +15,7 @@ class ReactiveRouting {
 public:
 	ReactiveRouting(std::string&);
 	void scanForCongestion();
-	float calculateCF(const int&, const float&, const float&) const;
+	float calculateCF(const int&, const float&, const float&, const int&) const;
 	void printAdjacencyList(const std::vector<Road<V>*>&) const;
 	void printCongestedRoads(Road<V>*) const;
 	void printDirectPTD(const std::vector<Road<V>*>&, const int&, const float&) const;
@@ -60,7 +59,7 @@ void ReactiveRouting<V>::scanForCongestion() {
 	float ls;
 	float v;
 	int nl = 1;
-	int limit = SPEED_LIMIT;
+	int limit;
 	float congestion;
 
 	// boolean for congestion in the grid
@@ -86,11 +85,11 @@ void ReactiveRouting<V>::scanForCongestion() {
 		nc = 0;
 		ls = 0.0;
 		v = 0.0;
+		limit = 0;
 		congestion = 0.0;
 
-		adj_list.push_back(new Road<V>(nme, src, dst, nc, ls, v, nl, limit));
+		adj_list.push_back(new Road<V>(nme, src, dst, nc, ls, v, nl, limit, congestion));
 		curr = adj_list.at(i);
-		curr->setCongestion(congestion);
 	}
 
 	// set road congestion, push congested roads into the LL of congested_roads, 
@@ -102,10 +101,8 @@ void ReactiveRouting<V>::scanForCongestion() {
 		nc = road->getNumCars();
 		ls = road->getLength();
 		v = road->getAvgSpeed();
-
-		// override road congestion values
-		congestion = calculateCF(nc, ls, v);
-		road->setCongestion(congestion);
+		limit = road->getSpeedLimit();
+		congestion = road->getCongestion();
 
 		// push congested roads into the linked list of congested roads
 		// don't push "border" roads in
@@ -116,15 +113,13 @@ void ReactiveRouting<V>::scanForCongestion() {
 			if (road->getCongestion() > 0.65) {
 				// if the list is empty...
 				if (congested_roads == nullptr) {
-					congested_roads = new Road<V>(nme, src, dst, nc, ls, v, nl, limit);
-					congested_roads->setCongestion(congestion);
+					congested_roads = new Road<V>(nme, src, dst, nc, ls, v, nl, limit, congestion);
 				}
 				// all subsequent roads...
 				else {
 					curr = congested_roads;
 					while (curr->getNextRoad() != nullptr) curr = curr->getNextRoad();
-					curr->setNextRoad(new Road<V>(nme, src, dst, nc, ls, v, nl, limit));
-					curr->getNextRoad()->setCongestion(congestion);
+					curr->setNextRoad(new Road<V>(nme, src, dst, nc, ls, v, nl, limit, congestion));
 				}
 				congestion_exists = true;
 			}
@@ -133,8 +128,7 @@ void ReactiveRouting<V>::scanForCongestion() {
 		// complete adjacency list
 		curr = adj_list.at(src);
 		while (curr->getNextRoad() != nullptr) curr = curr->getNextRoad();
-		curr->setNextRoad(new Road<V>(nme, src, dst, nc, ls, v, nl, limit));
-		curr->getNextRoad()->setCongestion(congestion);
+		curr->setNextRoad(new Road<V>(nme, src, dst, nc, ls, v, nl, limit, congestion));
 	}
 
 	// insert dummy node at end of each LL in the adjacency list (src/dst of infinity)
@@ -145,12 +139,12 @@ void ReactiveRouting<V>::scanForCongestion() {
 		nc = 0;
 		ls = 0.0;
 		v = 0;
+		limit = 0;
 		congestion = 0.0;
 
 		curr = adj_list.at(i);
 		while (curr->getNextRoad() != nullptr) curr = curr->getNextRoad();
-		curr->setNextRoad(new Road<V>(nme, src, dst, nc, ls, v, nl, limit));
-		curr->getNextRoad()->setCongestion(congestion);
+		curr->setNextRoad(new Road<V>(nme, src, dst, nc, ls, v, nl, limit, congestion));
 	}
 
 	printAdjacencyList(adj_list);
@@ -182,8 +176,9 @@ void ReactiveRouting<V>::scanForCongestion() {
 			nc = root->getNumCars();
 			ls = root->getLength();
 			v = root->getAvgSpeed();
-			directPTD.push_back(new Road<V>(nme, src, dst, nc, ls, v, nl, limit));
-			directPTD[directPTD.size() - 1]->setCongestion(root->getCongestion());
+			limit = root->getSpeedLimit();
+			congestion = root->getCongestion();
+			directPTD.push_back(new Road<V>(nme, src, dst, nc, ls, v, nl, limit, congestion));
 			holding_ptr = root;
 			current = root->getNextRoad();
 			// north, 0
@@ -214,8 +209,9 @@ void ReactiveRouting<V>::scanForCongestion() {
 						nc = current->getNumCars();
 						ls = current->getLength();
 						v = current->getAvgSpeed();
-						directPTD.push_back(new Road<V>(nme, src, dst, nc, ls, v, nl, limit));
-						directPTD[directPTD.size() - 1]->setCongestion(current->getCongestion());
+						limit = current->getSpeedLimit();
+						congestion = current->getCongestion();
+						directPTD.push_back(new Road<V>(nme, src, dst, nc, ls, v, nl, limit, congestion));
 						Road<V>* temporary = current;
 						current = current->getNextRoad();
 						holding_ptr->setNextRoad(current);
@@ -244,8 +240,9 @@ void ReactiveRouting<V>::scanForCongestion() {
 						nc = current->getNumCars();
 						ls = current->getLength();
 						v = current->getAvgSpeed();
-						directPTD.push_back(new Road<V>(nme, src, dst, nc, ls, v, nl, limit));
-						directPTD[directPTD.size() - 1]->setCongestion(current->getCongestion());
+						limit = current->getSpeedLimit();
+						congestion = current->getCongestion();
+						directPTD.push_back(new Road<V>(nme, src, dst, nc, ls, v, nl, limit, congestion));
 						Road<V>* temporary = current;
 						current = current->getNextRoad();
 						holding_ptr->setNextRoad(current);
@@ -274,8 +271,9 @@ void ReactiveRouting<V>::scanForCongestion() {
 						nc = current->getNumCars();
 						ls = current->getLength();
 						v = current->getAvgSpeed();
-						directPTD.push_back(new Road<V>(nme, src, dst, nc, ls, v, nl, limit));
-						directPTD[directPTD.size() - 1]->setCongestion(current->getCongestion());
+						limit = current->getSpeedLimit();
+						congestion = current->getCongestion();
+						directPTD.push_back(new Road<V>(nme, src, dst, nc, ls, v, nl, limit, congestion));
 						Road<V>* temporary = current;
 						current = current->getNextRoad();
 						holding_ptr->setNextRoad(current);
@@ -304,8 +302,9 @@ void ReactiveRouting<V>::scanForCongestion() {
 						nc = current->getNumCars();
 						ls = current->getLength();
 						v = current->getAvgSpeed();
-						directPTD.push_back(new Road<V>(nme, src, dst, nc, ls, v, nl, limit));
-						directPTD[directPTD.size() - 1]->setCongestion(current->getCongestion());
+						limit = current->getSpeedLimit();
+						congestion = current->getCongestion();
+						directPTD.push_back(new Road<V>(nme, src, dst, nc, ls, v, nl, limit, congestion));
 						Road<V>* temporary = current;
 						current = current->getNextRoad();
 						holding_ptr->setNextRoad(current);
@@ -407,13 +406,13 @@ length of the road segment, and the average speed of the cars on the segment.
 */
 
 template<class V>
-float ReactiveRouting<V>::calculateCF(const int& nc, const float& ls, const float& v) const {
+float ReactiveRouting<V>::calculateCF(const int& nc, const float& ls, const float& v, const int& limit) const {
 	// not normalized
 	float nncf;
 	// normalized
 	float ncf;
-	nncf = (nc / (MAX_NUM_CARS * ls)) / (v / SPEED_LIMIT);
-	ncf = nncf / (SPEED_LIMIT / MIN_SPEED);
+	nncf = (nc / (MAX_NUM_CARS * ls)) / (v / limit);
+	ncf = nncf / (limit / MIN_SPEED);
 	return ncf;
 }
 
@@ -521,7 +520,7 @@ void ReactiveRouting<V>::calculateLCP(const V& s, const V& t, std::vector<Road<V
 	float ls;
 	float v;
 	int nl = 1;
-	int limit = SPEED_LIMIT;
+	int limit;
 	float congestion;
 	Road<V>* curr = nullptr;
 
@@ -556,11 +555,12 @@ void ReactiveRouting<V>::calculateLCP(const V& s, const V& t, std::vector<Road<V
 				nc = curr->getNumCars();
 				ls = curr->getLength();
 				v = curr->getAvgSpeed();
+				limit = curr->getSpeedLimit();
 				congestion = curr->getCongestion();
 				// copy path from lci
 				pathToDest[nextAdjIntersection] = pathToDest[least_congested_intrsctn];
 				// add new road to path
-				pathToDest[nextAdjIntersection].push_back(new Road<V>(nme, src, dst, nc, ls, v, nl, limit));
+				pathToDest[nextAdjIntersection].push_back(new Road<V>(nme, src, dst, nc, ls, v, nl, limit, congestion));
 			}
 		}
 		// mark least congested unvisited intersection in segment_congestion[]
