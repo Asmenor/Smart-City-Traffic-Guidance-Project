@@ -1,3 +1,7 @@
+/*
+Currently this class in not in use. It has been kept for potential future use.
+*/
+
 #ifndef INTERSECTION_CLASS_
 #define INTERSECTION_CLASS_
 
