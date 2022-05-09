@@ -18,12 +18,10 @@ class Road {
 	Road<V> *next;
 
 public:
-	//int no_of_cars; // Setter method should be written and then be deleted
-	//float avg_speed; //mph // Setter method should be written and then be deleted
 
 	Road(): name("no name"), src(0),dst(0),Congestion(0.0), length_segment(0.0), no_of_cars(0), avg_speed(0.0), no_of_lanes(0), speed_limit(0)  {}
 	
-	Road(std::string& n, const V& s, const V& d, const int& nc, const float& ls, const float& v, const int& n_l, const int& limit) {
+	Road(std::string& n, const V& s, const V& d, const int& nc, const float& ls, const float& v, const int& n_l, const int& limit, const float& cng) {
 		name = n;
 		src = s;
 		dst = d;
@@ -32,15 +30,13 @@ public:
 		avg_speed = v;
 		no_of_lanes = n_l;
 		speed_limit = limit;
-		Congestion = no_of_cars / (no_of_lanes * avg_speed);
+		Congestion = cng;
 
 	}
 
-	void setRoadParameters(std::string& nme, const V& s, const V& d, const float& c, const float& l, const int& n, const float& v, const int& n_l, const int& limit) {
+	void setRoadParameters(std::string& nme, const V& s, const V& d, const float& c, const float& l, const int& n, const float& v, const int& n_l, const int& limit, const float& cng) {
 		name = nme, src = s; dst = d;
-		length_segment = l; no_of_cars = n; avg_speed = v, no_of_lanes = n_l; speed_limit = limit;
-		//re-calculate congestion
-		Congestion = no_of_cars / (no_of_lanes * avg_speed);
+		length_segment = l; no_of_cars = n; avg_speed = v, no_of_lanes = n_l; speed_limit = limit; Congestion = cng;
 	}
 
 	void setName(std::string& n) { name = n; }
