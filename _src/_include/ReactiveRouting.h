@@ -35,7 +35,7 @@ ReactiveRouting<V>::ReactiveRouting(std::string& f) {
 }
 
 /*
-This function utilizes 3 data structures: a vector of all roads, a linked list of
+This function utilizes 3 primary data structures: a vector of all roads, a linked list of
 congested roads, and an adjacency list of roads. The adjacency list is a vector, with
 each member containing a linked list of roads adjacent from an intersection of the
 map. (Some texts describe this relationship as 'adjacent to'.) At vector[0] are all road
@@ -46,7 +46,9 @@ vector of congested roads, and build the adjacency list to be used by the least 
 path algorithm that follows. Once the congested roads vector is built, it is parsed to
 identify lengths of congestion (more than 1 contiguous road segment of congestion with the
 same flow of traffic) and the least congested path algorithm is called for each area of
-congestion, be it single road segments or lengths of contiguous roads.
+congestion, be it single road segments or lengths of contiguous roads. Any congested road 
+segment along the edge of the graph is thrown out to eliminate the potential for "falling 
+off the map".
 */
 
 template<class V>
@@ -92,7 +94,7 @@ void ReactiveRouting<V>::scanForCongestion() {
 		curr = adj_list.at(i);
 	}
 
-	// set road congestion, push congested roads into the LL of congested_roads, 
+	// push congested roads into the LL of congested_roads, 
 	// complete adjacency list
 	for (auto& road : Roads) {
 		nme = road->getName();
@@ -105,21 +107,34 @@ void ReactiveRouting<V>::scanForCongestion() {
 		congestion = road->getCongestion();
 
 		// push congested roads into the linked list of congested roads
+		// must be ordered by ascending src
 		// don't push "border" roads in
 		if (road->getSrc() > (ROWS - 1) && road->getDst() > (ROWS - 1) &&
 			road->getSrc() < (no_intersections - ROWS) && road->getDst() < (no_intersections - ROWS) &&
 			road->getSrc() % ROWS != 0 && road->getDst() % ROWS != 0 &&
 			road->getSrc() % ROWS != (ROWS - 1) && road->getDst() % ROWS != (ROWS - 1)) {
 			if (road->getCongestion() > 0.65) {
+				curr = congested_roads;
 				// if the list is empty...
 				if (congested_roads == nullptr) {
 					congested_roads = new Road<V>(nme, src, dst, nc, ls, v, nl, limit, congestion);
 				}
-				// all subsequent roads...
+				// if the new road src value is less than 1st road src value in the list
+				else if (road->getSrc() < curr->getSrc()) {
+					Road<V>* temp = new Road<V>(nme, src, dst, nc, ls, v, nl, limit, congestion);
+					temp->setNextRoad(curr);
+					congested_roads = temp;
+				}
+				// all others
 				else {
-					curr = congested_roads;
-					while (curr->getNextRoad() != nullptr) curr = curr->getNextRoad();
-					curr->setNextRoad(new Road<V>(nme, src, dst, nc, ls, v, nl, limit, congestion));
+					while (curr->getNextRoad() != nullptr) {
+						if (curr->getNextRoad()->getSrc() > road->getSrc()) break;
+						else curr = curr->getNextRoad();
+					}
+					// now that we've found our spot...
+					Road<V>* temp = new Road<V>(nme, src, dst, nc, ls, v, nl, limit, congestion);
+					temp->setNextRoad(curr->getNextRoad());
+					curr->setNextRoad(temp);
 				}
 				congestion_exists = true;
 			}
@@ -131,11 +146,11 @@ void ReactiveRouting<V>::scanForCongestion() {
 		curr->setNextRoad(new Road<V>(nme, src, dst, nc, ls, v, nl, limit, congestion));
 	}
 
-	// insert dummy node at end of each LL in the adjacency list (src/dst of infinity)
+	// insert dummy road at end of each LL in the adjacency list (src/dst of 1000)
 	for (int i = 0; i < no_intersections; i++) {
 		nme = "dummy road";
-		src = inf;
-		dst = inf;
+		src = 1000;
+		dst = 1000;
 		nc = 0;
 		ls = 0.0;
 		v = 0;
@@ -402,7 +417,9 @@ void ReactiveRouting<V>::scanForCongestion() {
 
 /*
 A function for calculating congestion for any road segment using number of cars, the
-length of the road segment, and the average speed of the cars on the segment.
+length of the road segment, and the average speed of the cars on the segment. Currently,
+this function is not used as congestion is read in from the .csv file. The function
+remains for potential future implementation.
 */
 
 template<class V>
@@ -477,13 +494,13 @@ void ReactiveRouting<V>::printDirectPTD(const std::vector<Road<V>*>& dptd, const
 }
 
 /*
-Calculates the least congested path between two points as determined by scanForCongestion()
+Calculates the least congested path between two intersections as determined by scanForCongestion()
 using 4 primary data structures: the adjacency list passed from scanForCongestion(), an array
 marking intersections whose least congested path from the source has been found, an array of
 congestion values for each intersection from the source (continually updated until the LCP is
 found), and an array of vectors of roads for holding the specific path from source to destination.
 
-The adjacency list is  used as the primary data structure for running Dijkstra's algorithm.
+The adjacency list is used as the primary data structure for running Dijkstra's algorithm.
 Rather than iterating through an adjacency matrix (a common method for running the algorithm),
 the adjacency list is used to determine all roads adjacent from each intersection visited. While
 this method is programmatically a bit more intensive than the use of an adjacency matrix, it
@@ -618,7 +635,7 @@ float ReactiveRouting<V>::getNextAdjCongestion(int lci, std::vector<Road<V>*>& a
 	temp->setNextRoad(nullptr);
 
 	// look for dummy node, mark "air" false and move dummy node to the end if found
-	if (root->getNextRoad()->getDst() == inf) {
+	if (root->getNextRoad()->getDst() == 1000) {
 		air = false;
 		// move curr to the end of the list
 		curr = curr->getNextRoad();
