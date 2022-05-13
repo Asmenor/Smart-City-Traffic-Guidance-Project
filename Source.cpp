@@ -1,6 +1,6 @@
 /*
-Author: Ali Haider
-Email: alihaider1@outlook.com
+Authors: Ali Haider, David Hurtgen
+Email: alihaider1@outlook.com, dhurtgen@gmail.com
 */
 
 #include "_src/_include/Map.h"
@@ -27,7 +27,7 @@ int main()
 	*/
 
 	//David's calls
-	std::string f = "../../traffic-management/_src/_include/_data/manhattan_congested.csv";
+	std::string f = "../../traffic-management/_src/_include/_data/manhattan_test.csv";
 
 	ReactiveRouting<int> RR(f);
 	RR.scanForCongestion();
