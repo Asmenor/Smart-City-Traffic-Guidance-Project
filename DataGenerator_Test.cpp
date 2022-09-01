@@ -3,7 +3,7 @@
 
 #include <iostream>
 #include <string>
-#include "_include/DataGenerator.h"
+#include "_src/_include/DataGenerator.h"
 
 int main()
 {

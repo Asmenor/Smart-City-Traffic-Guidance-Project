@@ -6,7 +6,7 @@
 #include <vector>
 #include <ctime>
 #include <sstream>
-#include "_include/Road.h"
+#include "Road.h"
 
 using namespace std;
 
@@ -31,13 +31,19 @@ public:
 		int avgSpdMax,
 		int minCar,
 		int maxCar);
+	
+	void assignNewDataExponential(
+		int avgSpdMin,
+		int avgSpdMax,
+		int minCar,
+		int maxCar);
 
 	//vector<Data> getData();
-	vector<Road<V>> getData();
+	vector<Road<V> > getData();
 
 private:
 	//vector<Data> vect;
-	vector<Road<V>> vect;
+	vector<Road<V> > vect;
 
 	int RandBetweenInt(int min, int max)
 	{
@@ -55,7 +61,7 @@ private:
 };
 
 template <class V>
-vector<Road<V>> DataGenerator<V>::getData()
+vector<Road<V> > DataGenerator<V>::getData()
 {
 	return vect;
 }
@@ -63,16 +69,18 @@ vector<Road<V>> DataGenerator<V>::getData()
 template <class V>
 bool DataGenerator<V>::readPreviousData(string fileName) {
 	string line;
-	ifstream myfile("_include/_data/" + fileName);
+	ifstream myfile("_src/_include/_data/" + fileName);
 
 	Road<int> dt;
 	//Data dt;
 
 	if (myfile.is_open())
 	{
+		//std::cout << "file open\n";
 		getline(myfile, line); // skips the header row
 		while (getline(myfile, line))
 		{
+			//std::cout << "line read\n";
 			vector<string> tokens;
 			stringstream s_stream(line);
 			while (s_stream.good()) {
@@ -90,7 +98,7 @@ bool DataGenerator<V>::readPreviousData(string fileName) {
 
 			dt.setSpeedLimit(stoi(tokens[6]));
 			dt.setCongestion(stof(tokens[7]));
-
+			//std::cout << stof(tokens[7]);
 			vect.push_back(dt);
 		}
 		myfile.close();
@@ -104,6 +112,33 @@ bool DataGenerator<V>::readPreviousData(string fileName) {
 
 template <class V>
 void DataGenerator<V>::assignNewData(int avgSpdMin, int avgSpdMax, int minCar, int maxCar)
+{
+	srand(time(NULL));
+	// Generating new data on dynamic parameters
+	for (int i = 0; i < vect.size(); i++)
+	{
+		vect[i].avg_speed = RandBetweenInt(avgSpdMin, avgSpdMax);
+		vect[i].no_of_cars = RandBetweenInt(minCar, maxCar);
+
+
+		float F1 = vect[i].no_of_cars / (vect[i].getLength() * 377);
+
+		float F2 = vect[i].getAvgSpeed() / vect[i].getSpeedLimit();
+		float CF = F1 / F2;
+
+		// From here after needs to be discussed.
+
+		float CF_max = vect[i].getSpeedLimit() / 5.0f;
+		float CF_min = 0.0f;
+
+		vect[i].setCongestion((CF-CF_min)/(CF_max-CF_min));
+
+	}
+	return;
+}
+
+template <class V>
+void DataGenerator<V>::assignNewDataExponential(int avgSpdMin, int avgSpdMax, int minCar, int maxCar)
 {
 	srand(time(NULL));
 	// Generating new data on dynamic parameters
@@ -158,10 +193,5 @@ bool DataGenerator<V>::writeNewData(string fileName) {
 
 	return false;
 }
-
-
-
-
-
 
 #endif

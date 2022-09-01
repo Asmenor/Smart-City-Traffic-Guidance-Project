@@ -4,7 +4,8 @@
 #include <iostream>
 #include <string>
 #include "Map.h"
-
+#include "Road.h"
+#include <fstream>
 
 template <class V>
 class ProactiveRouting {
@@ -14,10 +15,15 @@ class ProactiveRouting {
 public:
     ProactiveRouting(std::string&);
     void printAllRoads() const;
-	void printAdjacencyMatrix() const;
+	void printAdjacencyMatrix(bool) const;
 	void printAdjacencyList() const;
     void calculateDijkstrasSP(const V&);
 	int findSmallestUnvisitedIntersection(bool[], float[]);
+	void generateMLSourceFileFromAdjList() const;
+	void generateMLSourceFileFromAdjMatrix() const;
+	void generateMLSourceFileHeaderFromCSV(std::string &);
+	void updateMLSourceFileFromVector(std::vector<Road<V> >&);
+
 
 };
 
@@ -35,9 +41,9 @@ void ProactiveRouting<V>::printAllRoads() const{
 }
 
 template<class V>
-void ProactiveRouting<V>::printAdjacencyMatrix() const{
+void ProactiveRouting<V>::printAdjacencyMatrix(bool head) const{
     //load f and create Map
-    manhattan.printAdjMatrix(true);
+    manhattan.printAdjMatrix(head);
 }
 
 template<class V>
@@ -119,6 +125,60 @@ int ProactiveRouting<V>::findSmallestUnvisitedIntersection(bool visited[], float
 }
 
 
+template<class V>
+void ProactiveRouting<V>::generateMLSourceFileHeaderFromCSV(std::string &file){
+	//read <city>.csv file and load road information
+	//https://www.new-york-city-map.com/manhattan.htm
+	std::ifstream dataFile(file.c_str());
+	std::string line;
+	std::getline (dataFile, line); //ignore header
 
+	//target file
+	std::ofstream f;
+	f.open("MLSourceFileFromCSV.csv",std::ios_base::out);	
+
+	if ( dataFile.is_open()){
+		if(f.is_open()) {
+			std::string name;
+			V src;
+			V dest;
+			while ( dataFile ) {
+				std::getline (dataFile, line);
+				//street_name,from_junc,to_junc,avg_speed,num_cars,seg_len,spd_limit,congestion
+				name = split(line,',',1,true);
+				src = split(line,',',2);
+				dest = split(line,',',3);
+				f << name << "[" << src << "-" << dest << "],";
+			}
+		}
+		else{
+		std::cout << "Cannot open output file (f)\n";
+	}
+	}
+	else{
+		std::cout << "Cannot open input file (dataFile)\n";
+	}
+	dataFile.close();
+	f.close();
+}
+
+template<class V>
+void ProactiveRouting<V>::updateMLSourceFileFromVector(std::vector<Road<V> >&vect){
+	//target file
+	std::ofstream f;
+	f.open("MLSourceFileFromCSV.csv",std::ios_base::app);	
+	f << "\n";
+	if(f.is_open()){
+		for (int i = 0; i < vect.size(); i++)
+		{
+			f << vect[i].getCongestion() << ",";
+		}
+	}
+	else{
+		std::cout << "Cannot open output file (f)\n";
+	}
+	
+	f.close();
+}
 
 #endif

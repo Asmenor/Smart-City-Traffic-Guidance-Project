@@ -31,7 +31,7 @@ public:
 	//Constructor (populates Map)
 	Map();
 	Map(std::string&);
-	bool updateMap();									//updates the map with latest congestion data
+	bool updateMap(std::string&);									//updates the map with latest congestion data
 	void printAdjList() const;
 	void printAdjMatrix(bool) const;
 	void printRoads() const;
@@ -54,8 +54,8 @@ Map<V>::Map(std::string &f) {
 	//adjListV.push_back(new Road<V>()); //dummy intersection
 
 	//for Pareto Random Variable
-	boost::random::mt19937 rng(time(0));
-    boost::random::exponential_distribution<> dist(1.0);
+	//boost::random::mt19937 rng(time(0));
+    //boost::random::exponential_distribution<> dist(1.0);
     float x_m = 1;
 	
 	/*Init Adjacency Matrix*/
@@ -131,10 +131,10 @@ Map<V>::Map(std::string &f) {
 
 			std::cout << std::fixed << "\nadding: " << src << "-->" << dest << std::endl;
 
-			/* DEPRECATED?
+			// DEPRECATED?
 			//Add congestion value to adj matrix
 			adj_matrix[src][dest] = congestion;
-			*/
+			
 
 			// DEPRECATED?
 			//populate adjacency list
@@ -223,7 +223,7 @@ Map<V>::Map(std::string &f) {
 }
 
 template<class V>
-bool updateMap(){
+bool Map<V>::updateMap(std::string& f){
 	std::cout << "reloading file, updating map";
 	return true;
 }

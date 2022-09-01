@@ -57,12 +57,13 @@ std::string split(std::string str, char seperator, int return_location, bool ret
     if (return_string) {
         int currIndex = 0, i = 0;
         int startIndex = 0, endIndex = 0;
+        std::string subStr;
         while (i <= str.length())
         {
             if (str[i] == seperator || i == str.length())
             {
                 endIndex = i;
-                std::string subStr = "";
+                subStr = "";
                 subStr.append(str, startIndex, endIndex - startIndex);
                 strings[currIndex] = subStr;
                 currIndex += 1;
@@ -70,7 +71,12 @@ std::string split(std::string str, char seperator, int return_location, bool ret
             }
             i++;
         }
-        return strings[return_location - 1];
+        std::string s = strings[return_location - 1];
+        
+        if (!s.empty() && s[s.length()-1] == '\n') {
+            s.erase(s.length()-1);
+}
+        return s;
     }
     return "";
 }
