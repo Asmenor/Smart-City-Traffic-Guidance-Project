@@ -321,5 +321,5 @@ class Simulate:
         plt.ylabel("Number of cars at intersection", fontsize=14)
         #plt.title(roads[col])
         plt.legend()
-        plt.savefig("plots/cars-timestamps-"+str(datetime.datetime.now())+".png", bbox_inches="tight")
+        #plt.savefig("plots/cars-timestamps-"+str(datetime.datetime.now())+".png", bbox_inches="tight")
         plt.show()
