@@ -62,9 +62,12 @@ class Simulate:
                     for prob in row:
                         flatFeatures.append(prob)
                 
-                if prevState == "left": flatFeatures.append(0)
-                elif prevState == "straight": flatFeatures.append(0.5)
-                elif prevState == "right": flatFeatures.append(1)
+                if prevState == "left":
+                    flatFeatures=flatFeatures + [1,0,0]
+                elif prevState == "straight":
+                    flatFeatures=flatFeatures + [0,1,0]
+                elif prevState == "right": 
+                    flatFeatures=flatFeatures + [0,0,1]
                 
                 self.LearningFeatures.append(flatFeatures)
                 self.LearningLabels.append(state)
@@ -213,9 +216,9 @@ class Simulate:
                 for prob in row:
                     FF.append(prob)
 
-            if Ps == "left": FF.append(0)
-            elif Ps == "straight": FF.append(0.5)
-            elif Ps == "right": FF.append(1)
+            if Ps == "left": FF=FF+[1,0,0]
+            elif Ps == "straight": FF=FF+[0,1,0]
+            elif Ps == "right": FF=FF+[0,0,1]
 
             self.TestingFeatures.append(FF)
             self.TestingLabels.append(s)
@@ -237,62 +240,7 @@ class Simulate:
             for j in range(len(self.lMap[i])):
                 y[i].append(self.lMap[i][j][3])
         #print(y)
-        """
-        #x = np.arange(0, 1.0, 0.01)
-        #y1 = np.sin(2*np.pi*x)
-        #y2 = np.sin(4*np.pi*x)
-        #lines = plt.plot(x, y[0], x, y[1])
-        #l1, l2 = lines
-        #plt.setp(lines, linestyle='--')       # set both to dashed
-        #plt.setp(l1, linewidth=2, color='r')  # line1 is thick and red
-        #plt.setp(l2, linewidth=1, color='g')  # line2 is thinner and green
-        #plt.plot(x,y)
-        
-        fig, ax = plt.subplots(1, 1, figsize=(12, 8))
-        ax.plot(x, lw=2)
-        
-        plt.style.use('ggplot')
-        
-        ax1 = plt.subplot(411)
-        plt.plot(x, y[0],color='black',linestyle='--', marker=".")
-        #plt.tick_params('x', labelsize=14)
-        plt.ylabel("V0", fontsize=14)
-        #plt.ylim(0,50,10)
-        plt.grid(False)
 
-        # share x only
-        ax2 = plt.subplot(412, sharex=ax1)
-        plt.plot(x, y[1],color='black',linestyle='--', marker=".")
-        # make these tick labels invisible
-        #plt.tick_params('x', labelbottom=False)
-        #plt.tick_params('x', labelsize=14)
-        #plt.ylim(0,50,10)
-        plt.ylabel("V1", fontsize=14)
-        plt.grid(False)
-        
-        
-        # share x only
-        ax3 = plt.subplot(413, sharex=ax1)
-        plt.plot(x, y[2],color='black',linestyle='--', marker=".")
-        # make these tick labels invisible
-        #plt.tick_params('x', labelbottom=False)
-        plt.ylabel("V2", fontsize=14)
-        #plt.ylim(0,50,10)
-        plt.grid(False)
-
-        # share x and y
-        ax4 = plt.subplot(414, sharex=ax1, sharey=ax1)
-        plt.plot(x, y[3],color='black',linestyle='--', marker=".")
-        plt.ylabel("V3", fontsize=14)
-        plt.tick_params('x', labelsize=14)
-        #plt.ylim(0,50,10)
-        plt.xlim(0,20,2)
-        plt.xlabel("Time steps", fontsize=14)
-        plt.grid(False)
-        plt.savefig("plots/cars-timesteps-"+str(datetime.datetime.now())+".png", bbox_inches="tight")
-        plt.show()
-        
-        """
         # line cyclers adapted to colourblind people
         from cycler import cycler
         line_cycler   = (cycler(color=["#E69F00", "#56B4E9", "#009E73", "#0072B2", "#D55E00", "#CC79A7", "#F0E442"]) +
