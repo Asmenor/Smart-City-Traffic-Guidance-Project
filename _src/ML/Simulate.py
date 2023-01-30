@@ -152,11 +152,13 @@ class Simulate:
 
                 #create vertex with all its properties
                 nextTimeStep[i] = [10,transition_matrix, state, 0] #0=num_cars
+                #print("nextTimeStep[",i,"]:", nextTimeStep[i])
                 prevState = state
-
             #init number of cars at every intersection using Pareto dist RV, t=0
+            print("len:",len(self.lCars),"self.lCars: ", self.lCars)
             for vNum, prop in nextTimeStep.items():
                 prop[3] = self.lCars[0][vNum]
+            print("nextTimeStep", nextTimeStep)
 
         self.lMap.append(nextTimeStep)
         #print("Time steps in map:",len(lMap))
@@ -271,3 +273,13 @@ class Simulate:
         plt.legend()
         #plt.savefig("plots/cars-timestamps-"+str(datetime.datetime.now())+".png", bbox_inches="tight")
         plt.show()
+
+
+    def getLMap(self):
+        return self.lMap
+
+    def getLCars(self):
+        return self.lCars
+
+    def getTimeSteps(self):
+        return self.tSteps
