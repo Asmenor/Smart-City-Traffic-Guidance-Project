@@ -62,7 +62,7 @@ class Simulate:
                 # ----------------------------------------------------
                 # Add Learning data to separate arrays along the way
                 # ----------------------------------------------------
-
+                rounded = []
                 for row in transition_matrix:
                     for prob in row:
                         flat_features.append(prob)
